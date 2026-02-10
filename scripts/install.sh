@@ -7,7 +7,9 @@ set -euo pipefail
 PRINCIPIA_HOME="${HOME}/.principia"
 NODE_MIN_MAJOR=20
 NODE_VERSION="v22.13.1"
-REPO_TARBALL="https://github.com/principia-cloud/principia-agent/archive/refs/heads/main.tar.gz"
+REPO_OWNER="principia-cloud"
+REPO_NAME="principia-agent"
+REPO_BRANCH="main"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -102,6 +104,18 @@ ensure_node() {
 # Download & extract source
 # ---------------------------------------------------------------------------
 
+get_github_token() {
+    # Prefer explicit env var, then try gh CLI
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+        echo "$GITHUB_TOKEN"
+        return
+    fi
+    if command -v gh >/dev/null 2>&1; then
+        gh auth token 2>/dev/null && return
+    fi
+    return 1
+}
+
 download_source() {
     local source_dir="${PRINCIPIA_HOME}/source"
 
@@ -113,8 +127,22 @@ download_source() {
     mkdir -p "$source_dir"
 
     info "Downloading Principia Agent source..."
-    curl -fsSL "$REPO_TARBALL" | tar xz -C "$source_dir" --strip-components=1 \
-        || error "Failed to download source from ${REPO_TARBALL}"
+
+    local token
+    if token="$(get_github_token)"; then
+        # Authenticated download (works for private repos)
+        curl -fsSL \
+            -H "Authorization: token ${token}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/tarball/${REPO_BRANCH}" \
+            | tar xz -C "$source_dir" --strip-components=1 \
+            || error "Failed to download source (authenticated)"
+    else
+        # Public repo fallback
+        local url="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${REPO_BRANCH}.tar.gz"
+        curl -fsSL "$url" | tar xz -C "$source_dir" --strip-components=1 \
+            || error "Failed to download source from ${url}"
+    fi
 
     ok "Source extracted → ${source_dir}"
 }
