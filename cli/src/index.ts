@@ -1,5 +1,5 @@
 /**
- * Cline CLI - TypeScript implementation with React Ink
+ * Principia CLI - TypeScript implementation with React Ink
  */
 
 import { exit } from "node:process"

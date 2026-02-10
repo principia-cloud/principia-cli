@@ -36,18 +36,16 @@
 	},
 	"keywords": [
 		"principia",
-		"claude",
-		"dev",
-		"mcp",
-		"openrouter",
-		"coding",
+		"robotics",
+		"simulation",
+		"isaac-sim",
+		"nvidia",
+		"robotics-simulation",
 		"agent",
 		"autonomous",
-		"chatgpt",
-		"sonnet",
 		"ai",
-		"llama",
-		"cli"
+		"cli",
+		"mcp"
 	],
 	"author": {
 		"name": "Principia Cloud"

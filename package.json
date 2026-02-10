@@ -1,7 +1,7 @@
 {
 	"name": "principia-agent",
 	"version": "0.1.0",
-	"description": "Autonomous coding agent CLI",
+	"description": "AI agent for building robotics simulations from natural language",
 	"private": true,
 	"type": "module",
 	"workspaces": [
