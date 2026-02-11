@@ -69,6 +69,7 @@ export const config = createVariant(ModelFamily.NEXT_GEN)
 		ClineDefaultTool.GENERATE_EXPLANATION,
 		ClineDefaultTool.USE_SKILL,
 		ClineDefaultTool.KB_SEARCH,
+		ClineDefaultTool.ISAAC_EXEC,
 	)
 	.placeholders({
 		MODEL_FAMILY: ModelFamily.NEXT_GEN,

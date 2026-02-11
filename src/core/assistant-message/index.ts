@@ -53,6 +53,10 @@ export const toolParamNames = [
 	"version",
 	"top_k",
 	"source_type",
+	"code",
+	"host",
+	"port",
+	"headless",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]

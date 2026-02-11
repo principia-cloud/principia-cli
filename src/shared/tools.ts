@@ -33,6 +33,7 @@ export enum ClineDefaultTool {
 	GENERATE_EXPLANATION = "generate_explanation",
 	USE_SKILL = "use_skill",
 	KB_SEARCH = "kb_search",
+	ISAAC_EXEC = "isaac_exec",
 }
 
 // Array of all tool names for compatibility
