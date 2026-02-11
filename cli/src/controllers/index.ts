@@ -100,7 +100,7 @@ export class CliEnvServiceClient implements EnvServiceClientInterface {
 	async getHostVersion(_request: proto.cline.EmptyRequest): Promise<proto.host.GetHostVersionResponse> {
 		return proto.host.GetHostVersionResponse.create({
 			version: CLI_VERSION,
-			platform: "Cline CLI - Node.js",
+			platform: "Principia CLI - Node.js",
 			clineType: ClineClient.Cli,
 		})
 	}

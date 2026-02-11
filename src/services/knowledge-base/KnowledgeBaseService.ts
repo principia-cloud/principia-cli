@@ -1,4 +1,3 @@
-import * as lancedb from "@lancedb/lancedb"
 import { Embedder } from "./Embedder"
 import type { KbSearchOptions, KbSearchResult } from "./types"
 
@@ -6,12 +5,13 @@ const TABLE_NAME = "simulator_kb"
 const DOCUMENTS_TABLE_NAME = "simulator_kb_documents"
 
 export class KnowledgeBaseService {
-	private db: lancedb.Connection | null = null
+	private db: any | null = null
 	private embedder = new Embedder()
 
 	constructor(private dbPath: string) {}
 
 	async connect(): Promise<void> {
+		const lancedb = await import("@lancedb/lancedb")
 		this.db = await lancedb.connect(this.dbPath)
 	}
 

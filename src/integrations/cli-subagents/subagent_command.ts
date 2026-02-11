@@ -1,17 +1,17 @@
 /**
- * Pattern to match simplified Cline CLI syntax: cline "prompt" or cline 'prompt'
+ * Pattern to match simplified Principia CLI syntax: cline "prompt" or cline 'prompt'
  * with optional additional flags after the closing quote
  */
 const CLINE_COMMAND_PATTERN = /^cline\s+(['"])(.+?)\1(\s+.*)?$/
 
 /**
- * Detects if a command is a Cline CLI subagent command.
+ * Detects if a command is a Principia CLI subagent command.
  *
  * Matches the simplified syntax: cline "prompt" or cline 'prompt'
  * This allows the system to apply subagent-specific settings like autonomous execution.
  *
  * @param command - The command string to check
- * @returns True if the command is a Cline CLI subagent command, false otherwise
+ * @returns True if the command is a Principia CLI subagent command, false otherwise
  */
 export function isSubagentCommand(command: string): boolean {
 	// Match simplified syntaxes
@@ -21,7 +21,7 @@ export function isSubagentCommand(command: string): boolean {
 }
 
 /**
- * Transforms simplified Cline CLI command syntax with subagent settings.
+ * Transforms simplified Principia CLI command syntax with subagent settings.
  *
  * Converts: cline "prompt" or cline 'prompt'
  * To: cline "prompt" --json -y
@@ -46,9 +46,9 @@ export function transformClineCommand(command: string): string {
 }
 
 /**
- * Injects subagent-specific command structure and settings into Cline CLI commands.
+ * Injects subagent-specific command structure and settings into Principia CLI commands.
  *
- * @param command - The Cline CLI command (simplified or full syntax)
+ * @param command - The Principia CLI command (simplified or full syntax)
  * @returns The command with injected flags and settings
  */
 function injectSubagentSettings(command: string): string {
