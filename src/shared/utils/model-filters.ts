@@ -9,7 +9,7 @@ import type { ApiProvider } from "@shared/api"
  * @returns Filtered array of model IDs
  */
 export function filterOpenRouterModelIds(modelIds: string[], provider: ApiProvider): string[] {
-	if (provider === "principia") {
+	if (provider === "cline") {
 		// For Cline provider: exclude :free models, but keep Minimax and Devstral models
 		return modelIds.filter((id) => {
 			// Keep all Minimax and devstral models regardless of :free suffix

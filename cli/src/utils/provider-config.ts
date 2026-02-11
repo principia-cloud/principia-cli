@@ -41,7 +41,7 @@ export async function applyProviderConfig(options: ApplyProviderConfigOptions): 
 		if (planModelKey) config[planModelKey] = finalModelId
 
 		// For cline/openrouter, also set model info (required for getModel() to return correct model)
-		if ((providerId === "principia" || providerId === "openrouter") && controller) {
+		if ((providerId === "cline" || providerId === "openrouter") && controller) {
 			const openRouterModels = await controller.readOpenRouterModels()
 			const modelInfo = openRouterModels?.[finalModelId]
 			if (modelInfo) {

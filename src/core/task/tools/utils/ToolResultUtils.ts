@@ -33,8 +33,8 @@ export class ToolResultUtils {
 					})()
 				: toolDescription(block)
 
-			// Get tool_use_id from map using call_id, or use "principia" as fallback for backward compatibility
-			const toolUseId = toolUseIdMap?.get(block.call_id || "") || "principia"
+			// Get tool_use_id from map using call_id, or use "cline" as fallback for backward compatibility
+			const toolUseId = toolUseIdMap?.get(block.call_id || "") || "cline"
 
 			// If we have already added a tool result for this tool use, skip adding another one
 			if (
@@ -51,11 +51,11 @@ export class ToolResultUtils {
 		} else {
 			// For complex content (arrays with text/image blocks), pass it through directly
 			// The content array should already be properly formatted with type, text, source, etc.
-			const toolUseId = toolUseIdMap?.get(block.call_id || "") || "principia"
+			const toolUseId = toolUseIdMap?.get(block.call_id || "") || "cline"
 
-			// If using backward-compatible "principia" ID and content is an array, spread it directly
+			// If using backward-compatible "cline" ID and content is an array, spread it directly
 			// instead of wrapping it (which would cause JSON.stringify in createToolResultBlock)
-			if ((toolUseId === "principia" || !toolUseId) && Array.isArray(content)) {
+			if ((toolUseId === "cline" || !toolUseId) && Array.isArray(content)) {
 				userMessageContent.push(...content)
 			} else {
 				userMessageContent.push(ToolResultUtils.createToolResultBlock(content, toolUseId, block.call_id))
@@ -64,9 +64,9 @@ export class ToolResultUtils {
 	}
 
 	private static createToolResultBlock(content: ToolResponse, id?: string, call_id?: string) {
-		// If id is "principia", we treat it as a plain text result for backward compatibility
+		// If id is "cline", we treat it as a plain text result for backward compatibility
 		// as we cannot find any existing tool call that matches this id.
-		if (id === "principia" || !id) {
+		if (id === "cline" || !id) {
 			return {
 				type: "text",
 				text: typeof content === "string" ? content : JSON.stringify(content, null, 2),

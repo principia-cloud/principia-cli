@@ -169,9 +169,9 @@ export function transformRemoteConfigToStateShape(remoteConfig: RemoteConfig): P
 
 	const clineSettings = remoteConfig.providerSettings?.Cline
 	if (clineSettings) {
-		transformed.planModeApiProvider = "principia"
-		transformed.actModeApiProvider = "principia"
-		providers.push("principia")
+		transformed.planModeApiProvider = "cline"
+		transformed.actModeApiProvider = "cline"
+		providers.push("cline")
 	}
 
 	// Map LiteLLM provider settings
