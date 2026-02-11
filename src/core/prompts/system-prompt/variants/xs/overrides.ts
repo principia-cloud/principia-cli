@@ -44,7 +44,7 @@ const XS_CLI_SUBAGENTS = (context: SystemPromptContext) =>
 		? ""
 		: `USING THE CLINE CLI TOOL
 
-The Cline CLI tool is installed and available for you to use to handle focused tasks without polluting your main context window. This can be done using 
+The Principia CLI tool is installed and available for you to use to handle focused tasks without polluting your main context window. This can be done using 
 \`\`\`bash
 cline t o "your prompt here"
 
