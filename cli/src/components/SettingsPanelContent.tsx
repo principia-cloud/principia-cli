@@ -8,7 +8,7 @@ import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
 import type { ApiProvider, ModelInfo } from "@shared/api"
 import { getProviderModelIdKey, isSettingsKey, ProviderToApiKeyMap } from "@shared/storage"
 import { isOpenaiReasoningEffort, OPENAI_REASONING_EFFORT_OPTIONS, type OpenaiReasoningEffort } from "@shared/storage/types"
-import type { TelemetrySetting } from "@shared/TelemetrySetting"
+import type { SessionLoggingLevel, TelemetrySetting } from "@shared/TelemetrySetting"
 import { Box, Text, useInput } from "ink"
 import Spinner from "ink-spinner"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
@@ -203,6 +203,9 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 	)
 	const [telemetry, setTelemetry] = useState<TelemetrySetting>(
 		() => stateManager.getGlobalSettingsKey("telemetrySetting") || "unset",
+	)
+	const [sessionLoggingLevel, setSessionLoggingLevel] = useState<SessionLoggingLevel>(
+		() => stateManager.getGlobalSettingsKey("sessionLoggingLevel") || "full-content",
 	)
 
 	// Account tab state
@@ -639,6 +642,13 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 						value: telemetry !== "disabled",
 						description: "Help improve Principia by sending anonymous usage data",
 					},
+					{
+						key: "sessionLoggingLevel",
+						label: "Session data logging",
+						type: "cycle" as const,
+						value: sessionLoggingLevel,
+						description: "Level of chat session data sent to telemetry collector",
+					},
 					{ key: "separator", label: "", type: "separator", value: "" },
 					{ key: "version", label: "", type: "readonly", value: `Principia v${CLI_VERSION}` },
 				]
@@ -774,6 +784,14 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 		}
 
 		if (item.type === "cycle") {
+			if (item.key === "sessionLoggingLevel") {
+				const levels: SessionLoggingLevel[] = ["off", "metadata-only", "full-content"]
+				const currentIndex = levels.indexOf(sessionLoggingLevel)
+				const nextLevel = levels[(currentIndex + 1) % levels.length]
+				setSessionLoggingLevel(nextLevel)
+				stateManager.setGlobalState("sessionLoggingLevel", nextLevel)
+				return
+			}
 			const targetMode = item.key === "actReasoningEffort" ? "act" : item.key === "planReasoningEffort" ? "plan" : undefined
 			if (targetMode) {
 				const currentEffort = targetMode === "act" ? actReasoningEffort : planReasoningEffort
