@@ -13,7 +13,7 @@ Principia is an open-source CLI agent that builds robotics simulations from natu
 
 <div align="center">
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/principia)
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/ZrvJpUVK56)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Website](https://img.shields.io/badge/Website-principia.cloud-orange)](https://principia.cloud/agent)
 
@@ -204,7 +204,7 @@ Built on top of [Cline](https://github.com/cline/cline) (Apache-2.0).
 ## Links
 
 - [Website](https://principia.cloud/agent)
-- [Discord](https://discord.gg/principia)
+- [Discord](https://discord.com/invite/ZrvJpUVK56)
 - [GitHub Issues](https://github.com/principia-cloud/principia-agent/issues)
 
 ## License
