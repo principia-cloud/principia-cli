@@ -23,6 +23,7 @@ import { web_fetch_variants } from "./web_fetch"
 import { web_search_variants } from "./web_search"
 import { write_to_file_variants } from "./write_to_file"
 import { kb_search_variants } from "./kb_search"
+import { isaac_exec_variants } from "./isaac_exec"
 
 /**
  * Registers all tool variants with the ClineToolSet provider.
@@ -55,6 +56,7 @@ export function registerClineToolSets(): void {
 		...write_to_file_variants,
 		...apply_patch_variants,
 		...kb_search_variants,
+		...isaac_exec_variants,
 	]
 
 	// Register each variant

@@ -55,6 +55,7 @@ export const config = createVariant(ModelFamily.GLM)
 		ClineDefaultTool.GENERATE_EXPLANATION,
 		ClineDefaultTool.USE_SKILL,
 		ClineDefaultTool.KB_SEARCH,
+		ClineDefaultTool.ISAAC_EXEC,
 	)
 	.placeholders({
 		MODEL_FAMILY: ModelFamily.GLM,

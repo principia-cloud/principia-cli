@@ -45,6 +45,7 @@ import { UseSkillToolHandler } from "./tools/handlers/UseSkillToolHandler"
 import { WebFetchToolHandler } from "./tools/handlers/WebFetchToolHandler"
 import { WebSearchToolHandler } from "./tools/handlers/WebSearchToolHandler"
 import { KbSearchToolHandler } from "./tools/handlers/KbSearchToolHandler"
+import { IsaacExecToolHandler } from "./tools/handlers/IsaacExecToolHandler"
 import { WriteToFileToolHandler } from "./tools/handlers/WriteToFileToolHandler"
 import { IPartialBlockHandler, SharedToolHandler, ToolExecutorCoordinator } from "./tools/ToolExecutorCoordinator"
 import { ToolValidator } from "./tools/ToolValidator"
@@ -240,6 +241,7 @@ export class ToolExecutor {
 		this.coordinator.register(new ApplyPatchHandler(validator))
 		this.coordinator.register(new GenerateExplanationToolHandler())
 		this.coordinator.register(new KbSearchToolHandler())
+		this.coordinator.register(new IsaacExecToolHandler())
 	}
 
 	/**
