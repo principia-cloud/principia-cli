@@ -254,7 +254,7 @@ function createHandlerForProvider(
 				vsCodeLmModelSelector:
 					mode === "plan" ? options.planModeVsCodeLmModelSelector : options.actModeVsCodeLmModelSelector,
 			})
-		case "principia":
+		case "cline":
 			return new ClineHandler({
 				onRetryAttempt: options.onRetryAttempt,
 				clineAccountId: options.clineAccountId,

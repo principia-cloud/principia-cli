@@ -434,7 +434,7 @@ async function initializeCli(options: InitOptions): Promise<CliContext> {
 		() => new StandaloneTerminalManager(),
 		createCliHostBridgeProvider(workspacePath),
 		logToChannel,
-		async () => (options.enableAuth ? AuthHandler.getInstance().getCallbackUrl() : ""),
+		async (path: string) => (options.enableAuth ? AuthHandler.getInstance().getCallbackUrl(path) : ""),
 		getCliBinaryPath,
 		EXTENSION_DIR,
 		DATA_DIR,
@@ -840,7 +840,7 @@ async function checkAnyProviderConfigured(): Promise<boolean> {
 	// Check all BYO provider API keys (loaded into config from secrets)
 	for (const [provider, keyField] of Object.entries(ProviderToApiKeyMap)) {
 		// Skip cline - already checked above with the correct key
-		if (provider === "principia") continue
+		if (provider === "cline") continue
 
 		const fields = Array.isArray(keyField) ? keyField : [keyField]
 		for (const field of fields) {

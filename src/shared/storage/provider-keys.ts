@@ -26,7 +26,7 @@ import {
 // Note: "cline" provider uses the same model ID key as "openrouter"
 const ProviderKeyMap: Partial<Record<ApiProvider, string>> = {
 	openrouter: "OpenRouterModelId",
-	principia: "OpenRouterModelId", // Principia provider uses OpenRouter model IDs
+	cline: "OpenRouterModelId", // Cline provider uses OpenRouter model IDs
 	openai: "OpenAiModelId",
 	ollama: "OllamaModelId",
 	lmstudio: "LmStudioModelId",
@@ -47,7 +47,7 @@ const ProviderKeyMap: Partial<Record<ApiProvider, string>> = {
 } as const
 
 export const ProviderToApiKeyMap: Partial<Record<ApiProvider, string | string[]>> = {
-	principia: ["clineApiKey", "clineAccountId"],
+	cline: ["clineApiKey", "clineAccountId"],
 	anthropic: "apiKey",
 	openrouter: "openRouterApiKey",
 	bedrock: ["awsAccessKey", "awsBedrockApiKey"],
@@ -88,7 +88,7 @@ export const ProviderToApiKeyMap: Partial<Record<ApiProvider, string | string[]>
 const ProviderDefaultModelMap: Partial<Record<ApiProvider, string>> = {
 	anthropic: anthropicDefaultModelId,
 	openrouter: openRouterDefaultModelId,
-	principia: openRouterDefaultModelId,
+	cline: openRouterDefaultModelId,
 	openai: openAiNativeDefaultModelId,
 	ollama: "",
 	lmstudio: "",

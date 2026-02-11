@@ -191,7 +191,7 @@ export class ClineAgent implements acp.Agent {
 				},
 			},
 			agentInfo: {
-				name: "principia",
+				name: "cline",
 				version: this.options.version,
 			},
 			authMethods: [
@@ -246,8 +246,8 @@ export class ClineAgent implements acp.Agent {
 			},
 			hostBridgeClientProvider,
 			(message: string) => Logger.info(message),
-			async () => {
-				return AuthHandler.getInstance().getCallbackUrl()
+			async (path: string) => {
+				return AuthHandler.getInstance().getCallbackUrl(path)
 			},
 			async () => "", // get binary location not needed in ACP mode
 			this.ctx.EXTENSION_DIR,
@@ -1011,8 +1011,8 @@ export class ClineAgent implements acp.Agent {
 
 					// Set up the provider configuration for cline
 					const stateManager = StateManager.get()
-					stateManager.setGlobalState("actModeApiProvider", "principia")
-					stateManager.setGlobalState("planModeApiProvider", "principia")
+					stateManager.setGlobalState("actModeApiProvider", "cline")
+					stateManager.setGlobalState("planModeApiProvider", "cline")
 					await stateManager.flushPendingState()
 
 					return {}
@@ -1154,9 +1154,9 @@ export class ClineAgent implements acp.Agent {
 		const stateManager = StateManager.get()
 		const mode = stateManager.getGlobalSettingsKey("mode") as string
 		const providerKey = mode === "act" ? "actModeApiProvider" : "planModeApiProvider"
-		const currentProvider = (stateManager.getGlobalSettingsKey(providerKey) as string) || "principia"
+		const currentProvider = (stateManager.getGlobalSettingsKey(providerKey) as string) || "cline"
 
-		if (currentProvider === "principia") {
+		if (currentProvider === "cline") {
 			// For Cline provider, check if we have stored auth data
 			const values = await Promise.all(["clineApiKey", "clineAccountId"].map((key) => secretStorage.get(key)))
 			return values.some(Boolean)

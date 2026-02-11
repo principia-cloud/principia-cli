@@ -270,8 +270,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 
 			if (authState.user && authState.user.email) {
 				// Auth succeeded - save configuration and transition to model selection
-				await applyProviderConfig({ providerId: "principia", controller })
-				setSelectedProvider("principia")
+				await applyProviderConfig({ providerId: "cline", controller })
+				setSelectedProvider("cline")
 				setModelId(openRouterDefaultModelId)
 				setStep("cline_model")
 			}
@@ -524,7 +524,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 			case "modelid":
 				setModelId("")
 				// Go back to cline_model if we came from there (Cline provider)
-				if (selectedProvider === "principia") {
+				if (selectedProvider === "cline") {
 					setStep("cline_model")
 				} else {
 					setStep("apikey")
