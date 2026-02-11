@@ -228,7 +228,7 @@ Below is the user's input when they indicated that they wanted to submit a Githu
 
 export const subagentToolResponse = () =>
 	`<explicit_instructions type="subagent">
-The user has requested to invoke a Cline CLI subagent with the context below. You should execute a subagent command to handle this request using the CLI subagents feature.
+The user has requested to invoke a Principia CLI subagent with the context below. You should execute a subagent command to handle this request using the CLI subagents feature.
 
 Transform the user's request into a subagent command by executing:
 cline "<prompt>"
