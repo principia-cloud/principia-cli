@@ -5,6 +5,7 @@ import { formatResponse } from "@core/prompts/responses"
 import { processFilesIntoText } from "@integrations/misc/extract-text"
 import { showSystemNotification } from "@integrations/notifications"
 import { telemetryService } from "@services/telemetry"
+import type { HistoryItem } from "@shared/HistoryItem"
 import { findLastIndex } from "@shared/array"
 import { COMPLETION_RESULT_CHANGES_FLAG } from "@shared/ExtensionMessage"
 import { Logger } from "@shared/services/Logger"
@@ -145,6 +146,8 @@ export class AttemptCompletionHandler implements IToolHandler, IPartialBlockHand
 
 		let commandResult: any
 		const lastMessage = config.messageState.getClineMessages().at(-1)
+		const taskHistory = config.services.stateManager.getGlobalStateKey("taskHistory") as HistoryItem[] | undefined
+		const historyItem = taskHistory?.find((h) => h.id === config.taskId)
 
 		if (command) {
 			if (lastMessage && lastMessage.ask !== "command") {
@@ -152,7 +155,7 @@ export class AttemptCompletionHandler implements IToolHandler, IPartialBlockHand
 				const completionMessageTs = await config.callbacks.say("completion_result", result, undefined, undefined, false)
 				await config.callbacks.saveCheckpoint(true, completionMessageTs)
 				await addNewChangesFlagToLastCompletionResultMessage()
-				telemetryService.captureTaskCompleted(config.ulid, config.taskId)
+				telemetryService.captureTaskCompleted(config.ulid, config.taskId, historyItem)
 			} else {
 				// we already sent a command message, meaning the complete completion message has also been sent
 				await config.callbacks.saveCheckpoint(true)
@@ -199,7 +202,7 @@ export class AttemptCompletionHandler implements IToolHandler, IPartialBlockHand
 			const completionMessageTs = await config.callbacks.say("completion_result", result, undefined, undefined, false)
 			await config.callbacks.saveCheckpoint(true, completionMessageTs)
 			await addNewChangesFlagToLastCompletionResultMessage()
-			telemetryService.captureTaskCompleted(config.ulid, config.taskId)
+			telemetryService.captureTaskCompleted(config.ulid, config.taskId, historyItem)
 		}
 
 		// we already sent completion_result says, an empty string asks relinquishes control over button and field

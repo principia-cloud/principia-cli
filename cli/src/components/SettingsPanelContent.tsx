@@ -704,6 +704,7 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 		features,
 		preferredLanguage,
 		telemetry,
+		sessionLoggingLevel,
 		isAccountLoading,
 		accountEmail,
 		accountBalance,
