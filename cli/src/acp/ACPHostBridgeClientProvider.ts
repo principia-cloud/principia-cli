@@ -135,7 +135,7 @@ class ACPEnvServiceClient implements EnvServiceClientInterface {
 		// Return version info for the ACP agent.
 		return proto.host.GetHostVersionResponse.create({
 			version: this.version,
-			platform: "Cline ACP Agent",
+			platform: "Principia ACP Agent",
 			clineType: ClineClient.Cli,
 		})
 	}
