@@ -259,6 +259,10 @@ describe("Telemetry system is abstracted and can easily switch between providers
 			const isPostHogConfigValidStub = sinon.stub(posthogConfigModule, "isPostHogConfigValid").returns(true)
 			const isSelfHostedStub = sinon.stub(ClineEndpoint, "isSelfHosted").returns(false)
 
+			// Enable PostHog via env var
+			const originalEnv = process.env.PRINCIPIA_ENABLE_POSTHOG
+			process.env.PRINCIPIA_ENABLE_POSTHOG = "true"
+
 			const defaultConfigs = TelemetryProviderFactory.getDefaultConfigs()
 
 			// Should include at least PostHog
@@ -268,9 +272,14 @@ describe("Telemetry system is abstracted and can easily switch between providers
 				"Should include PostHog configuration",
 			)
 
-			// Restore the stubs
+			// Restore the stubs and env
 			isPostHogConfigValidStub.restore()
 			isSelfHostedStub.restore()
+			if (originalEnv === undefined) {
+				delete process.env.PRINCIPIA_ENABLE_POSTHOG
+			} else {
+				process.env.PRINCIPIA_ENABLE_POSTHOG = originalEnv
+			}
 		})
 
 		it("should NOT include PostHog config when in selfHosted mode", () => {
@@ -290,20 +299,29 @@ describe("Telemetry system is abstracted and can easily switch between providers
 			isPostHogConfigValidStub.restore()
 		})
 
-		it("should include PostHog config when NOT in selfHosted mode and config is valid", () => {
+		it("should include PostHog config when NOT in selfHosted mode and config is valid and env var set", () => {
 			// Stub ClineEndpoint.isSelfHosted() to return false (normal mode)
 			const isSelfHostedStub = sinon.stub(ClineEndpoint, "isSelfHosted").returns(false)
 			const isPostHogConfigValidStub = sinon.stub(posthogConfigModule, "isPostHogConfigValid").returns(true)
 
+			// Enable PostHog via env var
+			const originalEnv = process.env.PRINCIPIA_ENABLE_POSTHOG
+			process.env.PRINCIPIA_ENABLE_POSTHOG = "true"
+
 			const configs = TelemetryProviderFactory.getDefaultConfigs()
 
-			// Should include PostHog when NOT in selfHosted mode and config is valid
+			// Should include PostHog when NOT in selfHosted mode, config is valid, and env var is set
 			const hasPosthog = configs.some((c) => c.type === "posthog")
-			assert.strictEqual(hasPosthog, true, "Should include PostHog configuration when not in selfHosted mode")
+			assert.strictEqual(hasPosthog, true, "Should include PostHog configuration when not in selfHosted mode and env var set")
 
-			// Restore the stubs
+			// Restore the stubs and env
 			isSelfHostedStub.restore()
 			isPostHogConfigValidStub.restore()
+			if (originalEnv === undefined) {
+				delete process.env.PRINCIPIA_ENABLE_POSTHOG
+			} else {
+				process.env.PRINCIPIA_ENABLE_POSTHOG = originalEnv
+			}
 		})
 
 		it("should NOT include build-time OTEL config when in selfHosted mode", () => {
@@ -560,6 +578,128 @@ describe("Telemetry system is abstracted and can easily switch between providers
 
 			logSpy.restore()
 			await noOpProvider.dispose()
+		})
+	})
+
+	describe("Session ID in events", () => {
+		it("should include session_id in captured events", async () => {
+			const noOpProvider = new NoOpTelemetryProvider()
+			const logSpy = sinon.spy(noOpProvider, "log")
+			const telemetryService = new TelemetryService([noOpProvider], MOCK_METADATA)
+
+			// Reset spy to ignore constructor events
+			logSpy.resetHistory()
+
+			telemetryService.captureTaskCreated("task-session-1", "anthropic")
+
+			assert.ok(logSpy.calledOnce, "Log should be called once")
+			const [, properties] = logSpy.firstCall.args
+			assert.ok(properties, "Properties should be defined")
+			assert.ok(properties.session_id, "Properties should include session_id")
+			assert.strictEqual(typeof properties.session_id, "string", "session_id should be a string")
+			assert.ok((properties.session_id as string).length > 0, "session_id should not be empty")
+
+			logSpy.restore()
+			await noOpProvider.dispose()
+		})
+
+		it("should include session_id in required events", async () => {
+			const noOpProvider = new NoOpTelemetryProvider()
+			const logRequiredSpy = sinon.spy(noOpProvider, "logRequired")
+			const telemetryService = new TelemetryService([noOpProvider], MOCK_METADATA)
+
+			// Reset spy to ignore constructor events
+			logRequiredSpy.resetHistory()
+
+			telemetryService.captureUserOptOut()
+
+			assert.ok(logRequiredSpy.calledOnce, "logRequired should be called once")
+			const [, properties] = logRequiredSpy.firstCall.args
+			assert.ok(properties, "Properties should be defined")
+			assert.ok(properties.session_id, "Required events should include session_id")
+
+			logRequiredSpy.restore()
+			await noOpProvider.dispose()
+		})
+	})
+
+	describe("SessionDataExporter", () => {
+		it("should emit log records via providers when captureTaskCompleted is called with taskId", async () => {
+			const noOpProvider = new NoOpTelemetryProvider()
+			const logSpy = sinon.spy(noOpProvider, "log")
+			const telemetryService = new TelemetryService([noOpProvider], MOCK_METADATA)
+
+			// Reset spy to ignore constructor events
+			logSpy.resetHistory()
+
+			// Call captureTaskCompleted with taskId (session export will fire-and-forget)
+			telemetryService.captureTaskCompleted("ulid-123", "task-id-456")
+
+			// The task.completed event should be captured immediately
+			assert.ok(logSpy.calledOnce, "Log should be called at least once for task.completed")
+			const [eventName] = logSpy.firstCall.args
+			assert.strictEqual(eventName, "task.completed", "First event should be task.completed")
+
+			logSpy.restore()
+			await noOpProvider.dispose()
+		})
+
+		it("should still work with old captureTaskCompleted signature (ulid only)", async () => {
+			const noOpProvider = new NoOpTelemetryProvider()
+			const logSpy = sinon.spy(noOpProvider, "log")
+			const telemetryService = new TelemetryService([noOpProvider], MOCK_METADATA)
+
+			logSpy.resetHistory()
+
+			// Old-style call with just ulid
+			telemetryService.captureTaskCompleted("ulid-789")
+
+			assert.ok(logSpy.calledOnce, "Log should be called once")
+			const [eventName, properties] = logSpy.firstCall.args
+			assert.strictEqual(eventName, "task.completed", "Event should be task.completed")
+			assert.ok(properties, "Properties should be defined")
+			assert.strictEqual(properties.ulid, "ulid-789", "Properties should include ulid")
+
+			logSpy.restore()
+			await noOpProvider.dispose()
+		})
+	})
+
+	describe("PostHog env var gating", () => {
+		it("should NOT include PostHog when PRINCIPIA_ENABLE_POSTHOG is not set", () => {
+			const originalEnv = process.env.PRINCIPIA_ENABLE_POSTHOG
+			delete process.env.PRINCIPIA_ENABLE_POSTHOG
+
+			const isSelfHostedStub = sinon.stub(ClineEndpoint, "isSelfHosted").returns(false)
+			const isPostHogConfigValidStub = sinon.stub(posthogConfigModule, "isPostHogConfigValid").returns(true)
+
+			const configs = TelemetryProviderFactory.getDefaultConfigs()
+			const hasPosthog = configs.some((c) => c.type === "posthog")
+			assert.strictEqual(hasPosthog, false, "Should NOT include PostHog when env var is not set")
+
+			isSelfHostedStub.restore()
+			isPostHogConfigValidStub.restore()
+			process.env.PRINCIPIA_ENABLE_POSTHOG = originalEnv
+		})
+
+		it("should include PostHog when PRINCIPIA_ENABLE_POSTHOG=true", () => {
+			const originalEnv = process.env.PRINCIPIA_ENABLE_POSTHOG
+			process.env.PRINCIPIA_ENABLE_POSTHOG = "true"
+
+			const isSelfHostedStub = sinon.stub(ClineEndpoint, "isSelfHosted").returns(false)
+			const isPostHogConfigValidStub = sinon.stub(posthogConfigModule, "isPostHogConfigValid").returns(true)
+
+			const configs = TelemetryProviderFactory.getDefaultConfigs()
+			const hasPosthog = configs.some((c) => c.type === "posthog")
+			assert.strictEqual(hasPosthog, true, "Should include PostHog when env var is true")
+
+			isSelfHostedStub.restore()
+			isPostHogConfigValidStub.restore()
+			if (originalEnv === undefined) {
+				delete process.env.PRINCIPIA_ENABLE_POSTHOG
+			} else {
+				process.env.PRINCIPIA_ENABLE_POSTHOG = originalEnv
+			}
 		})
 	})
 })
