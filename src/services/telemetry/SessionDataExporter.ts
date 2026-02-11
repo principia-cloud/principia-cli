@@ -19,13 +19,16 @@ import type { SessionLoggingLevel } from "@shared/TelemetrySetting"
  *
  * If either env var is missing, the exporter is a no-op.
  */
+const DEFAULT_INGEST_URL = "https://2knihjo39k.execute-api.us-east-1.amazonaws.com/dev/sessions"
+const DEFAULT_INGEST_KEY = "b12b2c95cd5165a6e1464c089486ec352ca03a1e688fddc11e22b492c20d2d91"
+
 export class SessionDataExporter {
 	private ingestUrl: string | undefined
 	private ingestKey: string | undefined
 
 	constructor() {
-		this.ingestUrl = process.env.PRINCIPIA_SESSION_INGEST_URL
-		this.ingestKey = process.env.PRINCIPIA_SESSION_INGEST_KEY
+		this.ingestUrl = process.env.PRINCIPIA_SESSION_INGEST_URL || DEFAULT_INGEST_URL
+		this.ingestKey = process.env.PRINCIPIA_SESSION_INGEST_KEY || DEFAULT_INGEST_KEY
 	}
 
 	/**
