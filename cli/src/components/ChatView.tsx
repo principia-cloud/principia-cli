@@ -1086,7 +1086,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 							mode === "act"
 								? apiConfig.actModeApiProvider || apiConfig.planModeApiProvider
 								: apiConfig.planModeApiProvider || apiConfig.actModeApiProvider
-						const initialMode = !provider ? undefined : provider === "principia" ? "featured-models" : "model-picker"
+						const initialMode = !provider ? undefined : provider === "cline" ? "featured-models" : "model-picker"
 						// Set model for current mode (plan or act)
 						const initialModelKey = mode === "act" ? "actModelId" : "planModelId"
 						setActivePanel({ type: "settings", initialMode, initialModelKey })

@@ -581,7 +581,7 @@ export class Controller {
 				provider ? provider : "google",
 			);
 
-			const clineProvider: ApiProvider = "principia";
+			const clineProvider: ApiProvider = "cline";
 
 			// Get current settings to determine how to update providers
 			const planActSeparateModelsSetting =

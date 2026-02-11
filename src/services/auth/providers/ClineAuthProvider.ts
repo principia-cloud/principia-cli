@@ -62,7 +62,7 @@ export interface ClineAuthApiTokenRefreshResponse {
 }
 
 export class ClineAuthProvider {
-	readonly name = "principia"
+	readonly name = "cline"
 	private refreshRetryCount = 0
 	private lastRefreshAttempt = 0
 	private readonly MAX_REFRESH_RETRIES = 3

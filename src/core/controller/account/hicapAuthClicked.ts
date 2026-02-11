@@ -12,7 +12,7 @@ export async function hicapAuthClicked(
 ): Promise<Empty> {
 	const callbackUrl = await HostProvider.get().getCallbackUrl("/hicap");
 	const authUrl = new URL("https://dashboard.hicap.ai/setup");
-	authUrl.searchParams.set("application", "principia");
+	authUrl.searchParams.set("application", "cline");
 	authUrl.searchParams.set("callback_url", callbackUrl);
 
 	await openExternal(authUrl.toString());

@@ -1961,7 +1961,7 @@ export class Task {
 
 				// Check if this is a Cline provider insufficient credits error - don't auto-retry these
 				const isClineProviderInsufficientCredits = (() => {
-					if (providerId !== "principia") {
+					if (providerId !== "cline") {
 						return false
 					}
 					try {

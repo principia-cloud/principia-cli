@@ -405,8 +405,8 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 			if (authState.user?.email) {
 				setIsWaitingForClineAuth(false)
 				setAccountChecked(false) // Reset so fetchAccountInfo can run
-				await applyProviderConfig({ providerId: "principia", controller })
-				setProvider("principia")
+				await applyProviderConfig({ providerId: "cline", controller })
+				setProvider("cline")
 				refreshModelIds()
 				fetchAccountInfo()
 			}
@@ -437,7 +437,7 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 						type: "editable",
 						value: provider ? getProviderLabel(provider) : "not configured",
 					},
-					...(provider === "principia"
+					...(provider === "cline"
 						? [{ key: "viewAccount", label: "View account", type: "action" as const, value: "" }]
 						: []),
 					...(separateModels
@@ -792,7 +792,7 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 			if ((item.key === "actModelId" || item.key === "planModelId") && hasModelPicker(provider)) {
 				setPickingModelKey(item.key as "actModelId" | "planModelId")
 				// For Cline provider, show featured models first
-				if (provider === "principia") {
+				if (provider === "cline") {
 					setFeaturedModelIndex(0)
 					setIsPickingFeaturedModel(true)
 				} else {
@@ -951,7 +951,7 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 
 			// For cline/openrouter providers, also set model info (like webview does)
 			let modelInfo: ModelInfo | undefined
-			if (providerForSelection === "principia" || providerForSelection === "openrouter") {
+			if (providerForSelection === "cline" || providerForSelection === "openrouter") {
 				const openRouterModels = await controller?.readOpenRouterModels()
 				modelInfo = openRouterModels?.[modelId]
 			}
@@ -1039,14 +1039,14 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 	const handleProviderSelect = useCallback(
 		async (providerId: string) => {
 			// Special handling for Cline - uses OAuth (but skip if already logged in)
-			if (providerId === "principia") {
+			if (providerId === "cline") {
 				setIsPickingProvider(false)
 				// Check if already logged in
 				const authInfo = AuthService.getInstance(controller).getInfo()
 				if (authInfo?.user?.email) {
 					// Already logged in - just set the provider
-					await applyProviderConfig({ providerId: "principia", controller })
-					setProvider("principia")
+					await applyProviderConfig({ providerId: "cline", controller })
+					setProvider("cline")
 					refreshModelIds()
 				} else {
 					// Not logged in - trigger OAuth

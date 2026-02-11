@@ -142,7 +142,7 @@ export interface ClineAgentCapabilities {
  * Cline agent info for ACP initialization response.
  */
 export interface ClineAgentInfo {
-	name: "principia"
+	name: "cline"
 	title: "Cline"
 	version: string
 }

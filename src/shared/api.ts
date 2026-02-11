@@ -21,7 +21,7 @@ export type ApiProvider =
 	| "doubao"
 	| "mistral"
 	| "vscode-lm"
-	| "principia"
+	| "cline"
 	| "litellm"
 	| "moonshot"
 	| "nebius"
