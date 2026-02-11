@@ -66,6 +66,7 @@ export const config = createVariant(ModelFamily.GEMINI_3)
 		ClineDefaultTool.TODO,
 		ClineDefaultTool.GENERATE_EXPLANATION,
 		ClineDefaultTool.USE_SKILL,
+		ClineDefaultTool.KB_SEARCH,
 	)
 	.placeholders({
 		MODEL_FAMILY: ModelFamily.GEMINI_3,

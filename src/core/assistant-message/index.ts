@@ -49,6 +49,10 @@ export const toolParamNames = [
 	"from_ref",
 	"to_ref",
 	"skill_name",
+	"simulator",
+	"version",
+	"top_k",
+	"source_type",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
