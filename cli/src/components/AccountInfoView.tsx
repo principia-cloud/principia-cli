@@ -53,10 +53,10 @@ export const AccountInfoView: React.FC<AccountInfoViewProps> = React.memo(({ con
 			const mode = stateManager.getGlobalSettingsKey("mode") as string
 			const providerKey = mode === "act" ? "actModeApiProvider" : "planModeApiProvider"
 			const currentProvider = stateManager.getGlobalSettingsKey(providerKey) as string
-			setProvider(currentProvider || "principia")
+			setProvider(currentProvider || "cline")
 
 			// If using Cline provider, fetch additional info
-			if (currentProvider === "principia") {
+			if (currentProvider === "cline") {
 				const authService = AuthService.getInstance(controller)
 
 				// Wait for auth to be restored - poll until we have auth info or timeout
@@ -140,7 +140,7 @@ export const AccountInfoView: React.FC<AccountInfoViewProps> = React.memo(({ con
 	}
 
 	// If not using Cline provider, just show the provider name
-	if (provider !== "principia") {
+	if (provider !== "cline") {
 		return (
 			<Box>
 				<Text color="gray">Provider: </Text>

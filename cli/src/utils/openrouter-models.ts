@@ -67,5 +67,5 @@ export function getOpenRouterDefaultModelId(): string {
  * Check if provider uses OpenRouter models (openrouter or cline)
  */
 export function usesOpenRouterModels(provider: string): boolean {
-	return provider === "openrouter" || provider === "principia"
+	return provider === "openrouter" || provider === "cline"
 }
