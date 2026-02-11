@@ -204,6 +204,7 @@ export interface ClineSayTool {
 		| "searchFiles"
 		| "webFetch"
 		| "webSearch"
+		| "kbSearch"
 		| "summarizeTask"
 		| "useSkill"
 	path?: string

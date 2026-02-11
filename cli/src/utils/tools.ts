@@ -83,6 +83,7 @@ export const TOOL_DESCRIPTIONS: Record<string, { ask: string; say: string }> = {
 	// Web
 	web_fetch: { ask: "wants to fetch content from this URL", say: "fetched content from this URL" },
 	web_search: { ask: "wants to search the web", say: "searched the web" },
+	kb_search: { ask: "wants to search the knowledge base", say: "searched the knowledge base" },
 
 	// Other
 	ask_followup_question: { ask: "wants to ask a question", say: "asked a question" },

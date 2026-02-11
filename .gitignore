@@ -1,5 +1,6 @@
 node_modules/
 dist-standalone/
 cli/dist/
+cli/.cache/
 .DS_Store
 *.tgz
