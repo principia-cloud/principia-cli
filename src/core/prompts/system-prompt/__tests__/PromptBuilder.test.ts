@@ -55,7 +55,7 @@ describe("PromptBuilder", () => {
 			temperature: 0.7,
 		},
 		baseTemplate:
-			"You are Cline.\n\n{{TOOL_USE_SECTION}}\n\n{{CAPABILITIES_SECTION}}\n\n{{RULES_SECTION}}\n\n{{SYSTEM_INFO_SECTION}}",
+			"You are Principia.\n\n{{TOOL_USE_SECTION}}\n\n{{CAPABILITIES_SECTION}}\n\n{{RULES_SECTION}}\n\n{{SYSTEM_INFO_SECTION}}",
 		componentOrder: [
 			SystemPromptSection.TOOL_USE,
 			SystemPromptSection.CAPABILITIES,
@@ -73,7 +73,7 @@ describe("PromptBuilder", () => {
 			const builder = new PromptBuilder(baseVariant, mockContext, mockComponents)
 			const result = await builder.build()
 
-			expect(result).to.include("You are Cline.")
+			expect(result).to.include("You are Principia.")
 			expect(result).to.include("TOOL USE")
 			expect(result).to.include("CAPABILITIES")
 			expect(result).to.include("RULES")
@@ -101,7 +101,7 @@ describe("PromptBuilder", () => {
 				const builder = new PromptBuilder(baseVariant, mockContext, incompleteComponents)
 				const result = await builder.build()
 
-				expect(result).to.include("You are Cline.")
+				expect(result).to.include("You are Principia.")
 				expect(result).to.include("TOOL USE REPLACER")
 				expect(result).to.include("SYSTEM INFO")
 				// Missing components should not break the build
@@ -191,7 +191,7 @@ describe("PromptBuilder", () => {
 				const result = await builder.build()
 
 				// Should still build successfully despite failing component
-				expect(result).to.include("You are Cline.")
+				expect(result).to.include("You are Principia.")
 				expect(result).to.include("CAPABILITIES WORK")
 				expect(result).to.include("TOOL USE CONTENT")
 
