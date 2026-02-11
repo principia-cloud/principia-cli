@@ -166,6 +166,49 @@ build() {
 }
 
 # ---------------------------------------------------------------------------
+# Knowledge base & embedding model
+# ---------------------------------------------------------------------------
+
+KB_API_URL="https://2knihjo39k.execute-api.us-east-1.amazonaws.com/dev/kb/presigned-url"
+KB_SIMULATOR="isaac_sim"
+
+setup_kb() {
+    local kb_dir="${PRINCIPIA_HOME}/data/knowledge-base"
+    local source_dir="${PRINCIPIA_HOME}/source"
+
+    # Skip if already downloaded
+    if [ -d "${kb_dir}/simulator_kb.lance" ]; then
+        ok "Knowledge base already exists at ${kb_dir}"
+    else
+        info "Downloading knowledge base for ${KB_SIMULATOR}..."
+
+        mkdir -p "$kb_dir"
+
+        # Get presigned URL from API
+        local presigned_json
+        presigned_json="$(curl -fsSL -X POST "$KB_API_URL" \
+            -H 'Content-Type: application/json' \
+            -d "{\"simulator\": \"${KB_SIMULATOR}\"}")" \
+            || error "Failed to get KB download URL"
+
+        local download_url
+        download_url="$(echo "$presigned_json" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).url)")" \
+            || error "Failed to parse KB download URL"
+
+        # Download and extract
+        curl -fsSL "$download_url" | tar xz -C "$kb_dir" \
+            || error "Failed to download/extract knowledge base"
+
+        ok "Knowledge base downloaded → ${kb_dir}"
+    fi
+
+    # Pre-download embedding model (caches in ~/.cache/huggingface/)
+    info "Warming up embedding model..."
+    (cd "$source_dir" && node scripts/warm-embedding-model.mjs) \
+        || warn "Failed to pre-download embedding model (will download on first use)"
+}
+
+# ---------------------------------------------------------------------------
 # Symlink
 # ---------------------------------------------------------------------------
 
@@ -250,6 +293,7 @@ main() {
     ensure_node
     download_source
     build
+    setup_kb
     create_symlink
     configure_path
 
