@@ -8,7 +8,7 @@ const CLAUDE_VERSION_MATCH_REGEX = /[-_ ]([\d](?:\.[05])?)[-_ ]?/
 export function isNextGenModelProvider(providerInfo: ApiProviderInfo): boolean {
 	const providerId = normalize(providerInfo.providerId)
 	return [
-		"principia",
+		"cline",
 		"anthropic",
 		"bedrock",
 		"gemini",

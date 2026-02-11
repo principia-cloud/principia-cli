@@ -18,7 +18,7 @@ interface ClineSharedMessageParam {
 	call_id?: string
 }
 
-export const REASONING_DETAILS_PROVIDERS = ["principia", "openrouter"]
+export const REASONING_DETAILS_PROVIDERS = ["cline", "openrouter"]
 
 /**
  * An extension of Anthropic.MessageParam that includes Cline-specific fields: reasoning_details.
