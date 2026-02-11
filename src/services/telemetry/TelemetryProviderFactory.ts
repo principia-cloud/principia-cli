@@ -106,8 +106,12 @@ export class TelemetryProviderFactory {
 	public static getDefaultConfigs(): TelemetryProviderConfig[] {
 		const configs: TelemetryProviderConfig[] = []
 
-		// Skip PostHog in selfHosted mode - enterprise customers should not send telemetry to PostHog
-		if (!ClineEndpoint.isSelfHosted() && isPostHogConfigValid(posthogConfig)) {
+		// Skip PostHog unless explicitly opted in via PRINCIPIA_ENABLE_POSTHOG=true
+		if (
+			process.env.PRINCIPIA_ENABLE_POSTHOG === "true" &&
+			!ClineEndpoint.isSelfHosted() &&
+			isPostHogConfigValid(posthogConfig)
+		) {
 			configs.push({ type: "posthog", ...posthogConfig })
 		}
 

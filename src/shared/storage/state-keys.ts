@@ -16,7 +16,7 @@ import { DEFAULT_MCP_DISPLAY_MODE, McpDisplayMode } from "@shared/McpDisplayMode
 import { WorkspaceRoot } from "@shared/multi-root/types"
 import { GlobalInstructionsFile } from "@shared/remote-config/schema"
 import { Mode } from "@shared/storage/types"
-import { TelemetrySetting } from "@shared/TelemetrySetting"
+import { SessionLoggingLevel, TelemetrySetting } from "@shared/TelemetrySetting"
 import { UserInfo } from "@shared/UserInfo"
 import { LanguageModelChatSelector } from "vscode"
 import { BlobStoreSettings } from "./ClineBlobStorage"
@@ -245,6 +245,7 @@ const USER_SETTINGS_FIELDS = {
 		transform: (v: any) => ({ ...DEFAULT_BROWSER_SETTINGS, ...v }),
 	},
 	telemetrySetting: { default: "unset" as TelemetrySetting },
+	sessionLoggingLevel: { default: "full-content" as SessionLoggingLevel },
 	planActSeparateModelsSetting: { default: false as boolean, isComputed: true },
 	enableCheckpointsSetting: { default: true as boolean },
 	shellIntegrationTimeout: { default: 4000 as number },
