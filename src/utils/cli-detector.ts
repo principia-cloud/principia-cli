@@ -14,7 +14,7 @@ interface CliSubagentDetectionParams {
 }
 
 /**
- * Check if the Cline CLI tool is installed on the system
+ * Check if the Principia CLI tool is installed on the system
  * @returns true if CLI is installed, false otherwise
  */
 export async function isClineCliInstalled(): Promise<boolean> {

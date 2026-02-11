@@ -637,10 +637,10 @@ export const SettingsPanelContent: React.FC<SettingsPanelContentProps> = ({
 						label: "Error/usage reporting",
 						type: "checkbox",
 						value: telemetry !== "disabled",
-						description: "Help improve Cline by sending anonymous usage data",
+						description: "Help improve Principia by sending anonymous usage data",
 					},
 					{ key: "separator", label: "", type: "separator", value: "" },
-					{ key: "version", label: "", type: "readonly", value: `Cline v${CLI_VERSION}` },
+					{ key: "version", label: "", type: "readonly", value: `Principia v${CLI_VERSION}` },
 				]
 
 			case "account":
