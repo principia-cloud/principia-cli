@@ -8,7 +8,7 @@ PRINCIPIA_HOME="\${HOME}/.principia"
 NODE_MIN_MAJOR=20
 NODE_VERSION="v22.13.1"
 REPO_OWNER="principia-cloud"
-REPO_NAME="principia-agent"
+REPO_NAME="principia-cli"
 REPO_BRANCH="main"
 
 # ---------------------------------------------------------------------------

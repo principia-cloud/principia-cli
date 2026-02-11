@@ -143,6 +143,9 @@
 		"web-tree-sitter": "^0.22.6",
 		"zod": "^3.24.2"
 	},
+	"optionalDependencies": {
+		"@lancedb/lancedb-darwin-x64": "^0.26.2"
+	},
 	"overrides": {
 		"tar-fs": ">=3.1.1",
 		"tar": "^7.5.2",
