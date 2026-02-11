@@ -2,7 +2,8 @@
  * Principia CLI - TypeScript implementation with React Ink
  */
 
-import { exit } from "node:process"
+// Use process.exit() instead of a captured `exit` reference, so that
+// the onnxruntime-node exit-crash workaround (in Embedder.ts) can intercept it.
 import type { ApiProvider } from "@shared/api"
 import { Command } from "commander"
 import { render } from "ink"
@@ -255,7 +256,7 @@ async function runTaskInPlainTextMode(
 	if (!hasAuth) {
 		printWarning("Not authenticated. Please run 'principia auth' first to configure your API credentials.")
 		await disposeCliContext(ctx)
-		exit(1)
+		process.exit(1)
 	}
 
 	const reason = getPlainTextModeReason(options)
@@ -277,7 +278,7 @@ async function runTaskInPlainTextMode(
 
 	// Ensure stdout is fully drained before exiting - critical for piping
 	await drainStdout()
-	exit(success ? 0 : 1)
+	process.exit(success ? 0 : 1)
 }
 
 /**
@@ -288,9 +289,9 @@ function createInkCleanup(ctx: CliContext, onTaskError?: () => boolean): () => P
 		await disposeCliContext(ctx)
 		if (onTaskError?.()) {
 			printWarning("Task ended with errors.")
-			exit(1)
+			process.exit(1)
 		}
-		exit(0)
+		process.exit(0)
 	}
 }
 
@@ -559,7 +560,7 @@ async function listHistory(options: { config?: string; limit?: number; page?: nu
 	if (sortedHistory.length === 0) {
 		printInfo("No task history found.")
 		await disposeCliContext(ctx)
-		exit(0)
+		process.exit(0)
 	}
 
 	await runInkApp(
@@ -573,7 +574,7 @@ async function listHistory(options: { config?: string; limit?: number; page?: nu
 		}),
 		async () => {
 			await disposeCliContext(ctx)
-			exit(0)
+			process.exit(0)
 		},
 	)
 }
@@ -602,7 +603,7 @@ async function showConfig(options: { config?: string }) {
 		}),
 		async () => {
 			await disposeCliContext(ctx)
-			exit(0)
+			process.exit(0)
 		},
 	)
 }
@@ -681,12 +682,12 @@ async function runAuth(options: {
 			printWarning(result.error || "Quick setup failed")
 			await telemetryService.captureHostEvent("auth", "error")
 			await disposeCliContext(ctx)
-			exit(1)
+			process.exit(1)
 		}
 
 		await telemetryService.captureHostEvent("auth", "completed")
 		await disposeCliContext(ctx)
-		exit(0)
+		process.exit(0)
 	}
 
 	// Interactive mode - show Ink UI
@@ -707,7 +708,7 @@ async function runAuth(options: {
 		}),
 		async () => {
 			await disposeCliContext(ctx)
-			exit(authError ? 1 : 0)
+			process.exit(authError ? 1 : 0)
 		},
 	)
 }
@@ -879,7 +880,7 @@ async function resumeTask(taskId: string, options: TaskOptions & { initialPrompt
 		printWarning(`Task not found: ${taskId}`)
 		printInfo("Use 'principia history' to see available tasks.")
 		await disposeCliContext(ctx)
-		exit(1)
+		process.exit(1)
 	}
 
 	telemetryService.captureHostEvent("resume_task_command", options.initialPrompt ? "with_prompt" : "interactive")
@@ -946,7 +947,7 @@ async function showWelcome(options: { verbose?: boolean; cwd?: string; config?: 
 		}),
 		async () => {
 			await disposeCliContext(ctx)
-			exit(hadError ? 1 : 0)
+			process.exit(hadError ? 1 : 0)
 		},
 	)
 }
@@ -996,7 +997,7 @@ program
 		// - `cat file | cline "explain"` -> OK (has stdin AND prompt)
 		if (stdinInput === "" && !prompt) {
 			printWarning("Empty input received from stdin. Please provide content to process.")
-			exit(1)
+			process.exit(1)
 		}
 
 		// If no prompt argument, check if input is piped via stdin

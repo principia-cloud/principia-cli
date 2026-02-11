@@ -235,6 +235,9 @@ const config: esbuild.BuildOptions = {
 		"pino",
 		"pino-roll",
 		"@vscode/ripgrep", // Uses __dirname to locate the binary
+		"onnxruntime-node", // Native .node addon, cannot be bundled
+		"@lancedb/lancedb", // Native addon for LanceDB
+		"sharp", // Native image processing (onnxruntime dep)
 	],
 	supported: { "top-level-await": true },
 	banner: {

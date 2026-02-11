@@ -22,6 +22,7 @@ import { use_skill_variants } from "./use_skill"
 import { web_fetch_variants } from "./web_fetch"
 import { web_search_variants } from "./web_search"
 import { write_to_file_variants } from "./write_to_file"
+import { kb_search_variants } from "./kb_search"
 
 /**
  * Registers all tool variants with the ClineToolSet provider.
@@ -53,6 +54,7 @@ export function registerClineToolSets(): void {
 		...web_search_variants,
 		...write_to_file_variants,
 		...apply_patch_variants,
+		...kb_search_variants,
 	]
 
 	// Register each variant
