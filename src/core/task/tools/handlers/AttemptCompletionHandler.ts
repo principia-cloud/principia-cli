@@ -152,7 +152,7 @@ export class AttemptCompletionHandler implements IToolHandler, IPartialBlockHand
 				const completionMessageTs = await config.callbacks.say("completion_result", result, undefined, undefined, false)
 				await config.callbacks.saveCheckpoint(true, completionMessageTs)
 				await addNewChangesFlagToLastCompletionResultMessage()
-				telemetryService.captureTaskCompleted(config.ulid)
+				telemetryService.captureTaskCompleted(config.ulid, config.taskId)
 			} else {
 				// we already sent a command message, meaning the complete completion message has also been sent
 				await config.callbacks.saveCheckpoint(true)
@@ -199,7 +199,7 @@ export class AttemptCompletionHandler implements IToolHandler, IPartialBlockHand
 			const completionMessageTs = await config.callbacks.say("completion_result", result, undefined, undefined, false)
 			await config.callbacks.saveCheckpoint(true, completionMessageTs)
 			await addNewChangesFlagToLastCompletionResultMessage()
-			telemetryService.captureTaskCompleted(config.ulid)
+			telemetryService.captureTaskCompleted(config.ulid, config.taskId)
 		}
 
 		// we already sent completion_result says, an empty string asks relinquishes control over button and field

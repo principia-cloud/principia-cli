@@ -6,10 +6,13 @@ import * as os from "os"
 import { ClineAccountUserInfo } from "@/services/auth/AuthService"
 import { Setting } from "@/shared/proto/index.host"
 import { Logger } from "@/shared/services/Logger"
+import { Session } from "@/shared/services/Session"
 import { Mode } from "@/shared/storage/types"
 import { version as extensionVersion } from "../../../package.json"
 import { setDistinctId } from "../logging/distinctId"
+import type { HistoryItem } from "@shared/HistoryItem"
 import type { ITelemetryProvider, TelemetryProperties } from "./providers/ITelemetryProvider"
+import { SessionDataExporter } from "./SessionDataExporter"
 import { TelemetryProviderFactory } from "./TelemetryProviderFactory"
 
 /**
@@ -115,6 +118,7 @@ export class TelemetryService {
 	])
 
 	private userId?: string
+	private sessionDataExporter: SessionDataExporter
 	private taskTurnCounts = new Map<string, number>()
 	private taskToolCallCounts = new Map<string, number>()
 	private taskErrorCounts = new Map<string, number>()
@@ -352,6 +356,7 @@ export class TelemetryService {
 		private providers: ITelemetryProvider[],
 		private telemetryMetadata: TelemetryMetadata,
 	) {
+		this.sessionDataExporter = new SessionDataExporter()
 		this.capture({ event: TelemetryService.EVENTS.USER.TELEMETRY_ENABLED })
 		Logger.info(`[TelemetryService] Initialized with ${providers.length} telemetry provider(s)`)
 	}
@@ -422,6 +427,7 @@ export class TelemetryService {
 		const propertiesWithMetadata: TelemetryProperties = {
 			...(event.properties || {}),
 			...this.telemetryMetadata,
+			session_id: Session.get().getSessionId(),
 		}
 		this.captureToProviders(event.event, propertiesWithMetadata, false)
 	}
@@ -435,6 +441,7 @@ export class TelemetryService {
 		const propertiesWithMetadata: TelemetryProperties = {
 			...(properties || {}),
 			...this.telemetryMetadata,
+			session_id: Session.get().getSessionId(),
 		}
 		this.captureToProviders(event, propertiesWithMetadata, true)
 	}
@@ -463,6 +470,7 @@ export class TelemetryService {
 		return {
 			...this.telemetryMetadata,
 			...(this.userId ? { userId: this.userId } : {}),
+			session_id: Session.get().getSessionId(),
 			...(extra ?? {}),
 		}
 	}
@@ -785,13 +793,20 @@ export class TelemetryService {
 	/**
 	 * Records when cline calls the task completion_result tool signifying that cline is done with the task
 	 * @param ulid Unique identifier for the task
+	 * @param taskId Optional task ID for session data export
+	 * @param historyItem Optional history item with aggregate stats
 	 */
-	public captureTaskCompleted(ulid: string) {
+	public captureTaskCompleted(ulid: string, taskId?: string, historyItem?: HistoryItem) {
 		this.capture({
 			event: TelemetryService.EVENTS.TASK.COMPLETED,
 			properties: { ulid },
 		})
 		this.resetTaskAggregates(ulid)
+
+		// Fire-and-forget session data export
+		this.sessionDataExporter.exportSessionData(taskId, ulid, historyItem).catch((error) => {
+			Logger.error("[TelemetryService] Session data export failed:", error)
+		})
 	}
 
 	/**
