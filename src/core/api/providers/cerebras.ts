@@ -43,7 +43,7 @@ export class CerebrasHandler implements ApiHandler {
 					fetch, // Use configured fetch with proxy support
 					defaultHeaders: {
 						...externalHeaders,
-						"X-Cerebras-3rd-Party-Integration": "principia",
+						"X-Cerebras-3rd-Party-Integration": "cline",
 					},
 				})
 			} catch (error) {

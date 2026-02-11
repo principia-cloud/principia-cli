@@ -187,7 +187,7 @@ export class OpenAiCodexHandler implements ApiHandler {
 
 			// Build Codex-specific headers
 			const codexHeaders: Record<string, string> = {
-				originator: "principia",
+				originator: "cline",
 				session_id: this.sessionId,
 				"User-Agent": `cline/${process.env.npm_package_version || "1.0.0"} (${os.platform()} ${os.release()}; ${os.arch()}) node/${process.version.slice(1)}`,
 				...(accountId ? { "ChatGPT-Account-Id": accountId } : {}),
@@ -242,7 +242,7 @@ export class OpenAiCodexHandler implements ApiHandler {
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${accessToken}`,
-			originator: "principia",
+			originator: "cline",
 			session_id: this.sessionId,
 			"User-Agent": `cline/${process.env.npm_package_version || "1.0.0"} (${os.platform()} ${os.release()}; ${os.arch()}) node/${process.version.slice(1)}`,
 		}

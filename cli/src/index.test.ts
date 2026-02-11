@@ -351,7 +351,7 @@ describe("getProviderModelIdKey", () => {
 	// Test the provider model ID key mapping logic
 	const providerKeyMap: Record<string, string> = {
 		openrouter: "OpenRouterModelId",
-		principia: "OpenRouterModelId",
+		cline: "OpenRouterModelId",
 		openai: "OpenAiModelId",
 		ollama: "OllamaModelId",
 		lmstudio: "LmStudioModelId",
@@ -383,7 +383,7 @@ describe("getProviderModelIdKey", () => {
 	})
 
 	it("should return same key for cline as openrouter", () => {
-		expect(getProviderModelIdKey("principia", "act")).toBe("actModeOpenRouterModelId")
+		expect(getProviderModelIdKey("cline", "act")).toBe("actModeOpenRouterModelId")
 	})
 
 	it("should return correct key for openai", () => {
