@@ -338,7 +338,7 @@ View logs with `principia dev log`.
 
 # BUGS
 
-Report bugs at: <https://github.com/principia-cloud/principia-agent/issues>
+Report bugs at: <https://github.com/principia-cloud/principia-cli/issues>
 
 For real-time help, join the Discord community at: <https://discord.com/invite/ZrvJpUVK56>
 

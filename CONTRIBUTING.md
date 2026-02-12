@@ -1,61 +1,26 @@
 # Contributing to Principia
 
-Thanks for your interest in contributing to Principia! This guide will help you get started.
+We appreciate your interest in contributing to Principia! Whether you're reporting bugs, suggesting features, improving docs, or submitting code, your contributions help improve the project for everyone.
 
 ## Reporting Bugs
 
-Open an issue on [GitHub Issues](https://github.com/principia-cloud/principia-agent/issues) with:
+1. **Check existing issues**: Search [GitHub Issues](https://github.com/principia-cloud/principia-cli/issues) to see if the bug has already been reported.
+2. **Create a new issue**: If it hasn't been reported, open a new issue with:
+   - A clear title and description
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Your environment (OS, Node version, `principia --version`)
+   - Relevant error messages or terminal output
+3. **Label your issue**: Use the `bug` label.
 
-- A clear title and description
-- Steps to reproduce
-- Expected vs actual behavior
-- Your environment (OS, Node version, Principia version)
+## Suggesting Enhancements
 
-## Suggesting Features
+1. **Check existing issues**: See if someone has already suggested something similar.
+2. **Create a new issue**: Describe the use case, how the enhancement would work, and why it benefits Principia users.
 
-Open a feature request on [GitHub Issues](https://github.com/principia-cloud/principia-agent/issues). Describe the use case and why it would be valuable.
+## Code Formatting
 
-## Development Setup
-
-### Prerequisites
-
-- Node.js 20.x or later
-- npm
-
-### Getting Started
-
-```bash
-# Clone the repo
-git clone https://github.com/principia-cloud/principia-agent.git
-cd principia-agent
-
-# Install dependencies
-npm install
-
-# Generate proto types
-npm run protos
-
-# Build the CLI
-npm run cli:build
-
-# Link for local development
-cd cli && npm run link
-```
-
-### Development Workflow
-
-```bash
-# Start watch mode (rebuilds on save)
-npm run cli:dev
-
-# Run tests
-cd cli && npm test
-
-# Type-check
-cd cli && npm run typecheck
-```
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for the full development guide.
+This project uses [Biome](https://biomejs.dev/) for formatting and linting. The formatter runs automatically during builds. See the [Development Guide](DEVELOPMENT.md#code-formatting) for details.
 
 ## Pull Requests
 
@@ -65,10 +30,16 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for the full development guide.
 4. Ensure type-checking passes: `cd cli && npm run typecheck`
 5. Open a PR with a clear description of what and why
 
-### Code Style
+## Documentation
 
-This project uses [Biome](https://biomejs.dev/) for formatting and linting. The formatter runs automatically during the build. No manual formatting needed.
+Documentation improvements are always welcome. Fix typos, clarify explanations, add examples.
+
+For detailed development setup and workflow, see the [Development Guide](DEVELOPMENT.md).
 
 ## License
 
 By contributing, you agree that your contributions will be licensed under the [Apache License 2.0](LICENSE).
+
+---
+
+Join our [Discord](https://discord.com/invite/ZrvJpUVK56) to discuss ideas or get help with contributions.
