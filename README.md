@@ -47,22 +47,6 @@
   </tr>
 </table>
 
-## Quick Install
-
-**macOS / Linux**
-
-```bash
-curl -fsSL https://principia.cloud/install.sh | bash
-```
-
-**Windows**
-
-```powershell
-irm https://principia.cloud/install.ps1 | iex
-```
-
-**Or [build from source](DEVELOPMENT.md#quick-start)**
-
 ## See It in Action
 
 <table>
@@ -112,6 +96,22 @@ irm https://principia.cloud/install.ps1 | iex
 ### Full Demo
 
 https://github.com/user-attachments/assets/8e44c98a-c6d4-4b21-834c-521e923cb675
+
+## Quick Install
+
+**macOS / Linux**
+
+```bash
+curl -fsSL https://principia.cloud/install.sh | bash
+```
+
+**Windows**
+
+```powershell
+irm https://principia.cloud/install.ps1 | iex
+```
+
+**Or [build from source](DEVELOPMENT.md#quick-start)**
 
 ## Usage
 
