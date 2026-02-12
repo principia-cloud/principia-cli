@@ -123,9 +123,17 @@ export async function detectSimulatorEnv(isTesting = false): Promise<string> {
 			}
 		}
 		if (isaacPath) {
-			// Try to extract version from path name (isaac-sim-X.Y.Z)
-			const versionMatch = isaacPath.match(/isaac-sim[- ]?([\d.]+)/)
-			const ver = versionMatch ? versionMatch[1] : "detected"
+			let ver = "detected"
+			// 1. Try reading the VERSION file (most reliable)
+			try {
+				ver = await runQuiet("cat", [`${isaacPath}/VERSION`])
+			} catch {
+				// 2. Fall back to extracting version from path name (isaac-sim-X.Y.Z)
+				const versionMatch = isaacPath.match(/isaac-sim[- ]?([\d.]+)/)
+				if (versionMatch) {
+					ver = versionMatch[1]
+				}
+			}
 			lines.push(`  Isaac Sim: ${ver} (${isaacPath})`)
 		}
 	} catch {
@@ -150,7 +158,10 @@ export async function detectSimulatorEnv(isTesting = false): Promise<string> {
 		lines.push(`  ROS 2: ${rosDistro}`)
 	}
 
-	cachedSimEnv = lines.length > 0 ? `\n\nSimulator Environment:\n${lines.join("\n")}` : ""
+	cachedSimEnv =
+		lines.length > 0
+			? `\n\nSimulator Environment:\n${lines.join("\n")}`
+			: `\n\nSimulator Environment:\n  No simulators were automatically detected. If the user's request involves a simulator (e.g., Isaac Sim, MuJoCo, Genesis), ask them which simulator they are using, its version, and its install path before proceeding.`
 	return cachedSimEnv
 }
 
@@ -164,22 +175,22 @@ export async function getSystemEnv(context: SystemPromptContext, isTesting = fal
 	const workspaces = (await getWorkspacePaths({}))?.paths || [currentWorkDir]
 	return isTesting
 		? {
-				os: "macOS",
-				ide: "TestIde",
-				shell: "/bin/zsh",
-				homeDir: "/Users/tester",
-				workingDir: "/Users/tester/dev/project",
-				// Multi-root workspace example: ["/Users/tester/dev/project", "/Users/tester/dev/foo", "/Users/tester/bar"],
-				workspaces: ["/Users/tester/dev/project"],
-			}
+			os: "macOS",
+			ide: "TestIde",
+			shell: "/bin/zsh",
+			homeDir: "/Users/tester",
+			workingDir: "/Users/tester/dev/project",
+			// Multi-root workspace example: ["/Users/tester/dev/project", "/Users/tester/dev/foo", "/Users/tester/bar"],
+			workspaces: ["/Users/tester/dev/project"],
+		}
 		: {
-				os: osName(),
-				ide: context.ide,
-				shell: getEffectiveShell(context),
-				homeDir: osModule.homedir(),
-				workingDir: currentWorkDir,
-				workspaces: workspaces,
-			}
+			os: osName(),
+			ide: context.ide,
+			shell: getEffectiveShell(context),
+			homeDir: osModule.homedir(),
+			workingDir: currentWorkDir,
+			workspaces: workspaces,
+		}
 }
 
 export async function getSystemInfo(variant: PromptVariant, context: SystemPromptContext): Promise<string> {
