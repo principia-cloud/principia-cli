@@ -115,14 +115,21 @@ irm https://principia.cloud/install.ps1 | iex
 
 ## Usage
 
+### Interactive Mode
+
 ```bash
-principia                                                  # Start interactive mode
-principia "Create a pick-and-place simulation for a UR5 arm"  # Run a task directly
+principia
 ```
 
 <div align="center">
   <img src="img/cli-screenshot.png" alt="Principia CLI" width="600">
 </div>
+
+### Run with a Prompt
+
+```bash
+principia "Create a pick-and-place simulation for a UR5 arm"
+```
 
 See the [Development Guide](DEVELOPMENT.md#cli-reference) for the full CLI reference.
 
