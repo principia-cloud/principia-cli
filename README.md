@@ -1,9 +1,9 @@
 <div align="center">
   <a href="https://principia.cloud/agent" target="_blank" rel="noopener noreferrer">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="img/logo_white.png" width="320">
-      <source media="(prefers-color-scheme: light)" srcset="img/logo.png" width="320">
-      <img alt="Principia" width="320" src="img/logo.png">
+      <source media="(prefers-color-scheme: dark)" srcset="img/logo_white.png" width="420">
+      <source media="(prefers-color-scheme: light)" srcset="img/logo.png" width="420">
+      <img alt="Principia" width="420" src="img/logo.png">
     </picture>
   </a>
 
