@@ -1,6 +1,10 @@
 <div align="center">
   <a href="https://principia.cloud/agent" target="_blank" rel="noopener noreferrer">
-    <img alt="Principia" width="200" src="img/logo.png">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="img/logo_white.png" width="320">
+      <source media="(prefers-color-scheme: light)" srcset="img/logo.png" width="320">
+      <img alt="Principia" width="320" src="img/logo.png">
+    </picture>
   </a>
 
   <p>Build robotics simulations from natural language</p>
@@ -8,6 +12,7 @@
   <p>
     <a href="https://principia.cloud/agent"><img src="https://img.shields.io/badge/principia.cloud-orange" alt="Website"></a>
     <a href="https://discord.com/invite/ZrvJpUVK56"><img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
+    <a href="https://x.com/principia_cloud"><img src="https://img.shields.io/twitter/follow/principia_cloud?style=social" alt="X (Twitter)"></a>
     <a href="https://github.com/principia-cloud/principia-cli"><img src="https://img.shields.io/github/stars/principia-cloud/principia-cli?style=social" alt="GitHub Stars"></a>
     <a href="https://github.com/principia-cloud/principia-cli/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
   </p>
@@ -21,11 +26,30 @@
 
 ## What Principia Does
 
-- **Generate simulation code** from plain English descriptions
-- **Read, write, and execute code** across your robotics project
-- **Configure physics and environments** for NVIDIA Isaac Sim and other simulators
-- **Iterate interactively** — refine simulations through conversation
-- **Plan before acting** — discuss architecture in Plan mode, execute in Act mode
+<table>
+  <tr>
+    <td align="center" width="20%">
+      <h4>Prompt to Sim</h4>
+      <sub>Describe a simulation in plain English — Principia writes the code and runs it.</sub>
+    </td>
+    <td align="center" width="20%">
+      <h4>Code Execution</h4>
+      <sub>Read, write, and execute code across your robotics project.</sub>
+    </td>
+    <td align="center" width="20%">
+      <h4>Physics Config</h4>
+      <sub>Configure environments for Isaac Sim and other simulators.</sub>
+    </td>
+    <td align="center" width="20%">
+      <h4>Interactive</h4>
+      <sub>Refine simulations through conversation — iterate without restarting.</sub>
+    </td>
+    <td align="center" width="20%">
+      <h4>Plan & Act</h4>
+      <sub>Discuss architecture in Plan mode, then execute in Act mode.</sub>
+    </td>
+  </tr>
+</table>
 
 ## See It in Action
 
@@ -92,8 +116,13 @@ irm https://principia.cloud/install.ps1 | iex
 ## Usage
 
 ```bash
-principia "Create a pick-and-place simulation for a UR5 arm"
+principia                                                  # Start interactive mode
+principia "Create a pick-and-place simulation for a UR5 arm"  # Run a task directly
 ```
+
+<div align="center">
+  <img src="img/cli-screenshot.png" alt="Principia CLI" width="600">
+</div>
 
 See the [Development Guide](DEVELOPMENT.md#cli-reference) for the full CLI reference.
 
