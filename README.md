@@ -28,25 +28,25 @@
 
 <table>
   <tr>
-    <td align="center" width="20%">
+    <td align="center" valign="top" width="20%">
       <h4>Prompt to Sim</h4>
       <sub>Describe a simulation in plain English — Principia writes the code and runs it.</sub>
     </td>
-    <td align="center" width="20%">
+    <td align="center" valign="top" width="20%">
       <h4>Code Execution</h4>
-      <sub>Read, write, and execute code across your robotics project.</sub>
+      <sub>Read, write, and execute code across your entire robotics project with permission.</sub>
     </td>
-    <td align="center" width="20%">
+    <td align="center" valign="top" width="20%">
       <h4>Physics Config</h4>
-      <sub>Configure environments for Isaac Sim and other simulators.</sub>
+      <sub>Configure environments and physics for Isaac Sim and other simulators.</sub>
     </td>
-    <td align="center" width="20%">
+    <td align="center" valign="top" width="20%">
       <h4>Interactive</h4>
       <sub>Refine simulations through conversation — iterate without restarting.</sub>
     </td>
-    <td align="center" width="20%">
+    <td align="center" valign="top" width="20%">
       <h4>Plan & Act</h4>
-      <sub>Discuss architecture in Plan mode, then execute in Act mode.</sub>
+      <sub>Discuss architecture in Plan mode, then execute changes in Act mode.</sub>
     </td>
   </tr>
 </table>
