@@ -65,10 +65,6 @@ irm https://principia.cloud/install.ps1 | iex
 
 ## See It in Action
 
-<div align="center">
-  <video src="https://github.com/principia-cloud/principia-cli/raw/main/img/demo.mp4" width="720" controls></video>
-</div>
-
 <table>
   <tr>
     <td align="center" width="50%">
@@ -112,6 +108,10 @@ irm https://principia.cloud/install.ps1 | iex
     </td>
   </tr>
 </table>
+
+### Full Demo
+
+https://github.com/principia-cloud/principia-cli/raw/main/img/demo.mp4
 
 ## Usage
 
