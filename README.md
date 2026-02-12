@@ -18,10 +18,6 @@
   </p>
 </div>
 
-<div align="center">
-  <video src="https://github.com/principia-cloud/principia-cli/raw/main/img/demo.mp4" width="720" controls></video>
-</div>
-
 ---
 
 ## What Principia Does
@@ -51,7 +47,27 @@
   </tr>
 </table>
 
+## Quick Install
+
+**macOS / Linux**
+
+```bash
+curl -fsSL https://principia.cloud/install.sh | bash
+```
+
+**Windows**
+
+```powershell
+irm https://principia.cloud/install.ps1 | iex
+```
+
+**Or [build from source](DEVELOPMENT.md#quick-start)**
+
 ## See It in Action
+
+<div align="center">
+  <video src="https://github.com/principia-cloud/principia-cli/raw/main/img/demo.mp4" width="720" controls></video>
+</div>
 
 <table>
   <tr>
@@ -96,22 +112,6 @@
     </td>
   </tr>
 </table>
-
-## Quick Install
-
-**macOS / Linux**
-
-```bash
-curl -fsSL https://principia.cloud/install.sh | bash
-```
-
-**Windows**
-
-```powershell
-irm https://principia.cloud/install.ps1 | iex
-```
-
-**Or [build from source](DEVELOPMENT.md#quick-start)**
 
 ## Usage
 
