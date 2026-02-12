@@ -1,211 +1,152 @@
-```
-    ____       _            _       _
-   / __ \_____(_)___  _____(_)___  (_)___ _
-  / /_/ / ___/ / __ \/ ___/ / __ \/ / __ `/
- / ____/ /  / / / / / /__/ / /_/ / / /_/ /
-/_/   /_/  /_/_/ /_/\___/_/ .___/_/\__,_/
-                         /_/
-```
-
-# Principia — AI Agent for Robotics Simulation
-
-Principia is an open-source CLI agent that builds robotics simulations from natural language. Describe what you want — a robotic arm picking up objects, a quadruped navigating terrain, a warehouse fleet — and Principia writes the code, configures the physics, and runs the simulation. Think of it as Cursor for robotics.
-
 <div align="center">
+  <a href="https://principia.cloud/agent" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="img/logo_white.png" width="420">
+      <source media="(prefers-color-scheme: light)" srcset="img/logo.png" width="420">
+      <img alt="Principia" width="420" src="img/logo.png">
+    </picture>
+  </a>
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/ZrvJpUVK56)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Website](https://img.shields.io/badge/Website-principia.cloud-orange)](https://principia.cloud/agent)
+  <p>Build robotics simulations from natural language</p>
 
+  <p>
+    <a href="https://principia.cloud/agent"><img src="https://img.shields.io/badge/principia.cloud-orange" alt="Website"></a>
+    <a href="https://discord.com/invite/ZrvJpUVK56"><img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
+    <a href="https://x.com/PrincipiaSim"><img src="https://img.shields.io/twitter/follow/PrincipiaSim?style=social" alt="X (Twitter)"></a>
+    <a href="https://github.com/principia-cloud/principia-cli"><img src="https://img.shields.io/github/stars/principia-cloud/principia-cli?style=social" alt="GitHub Stars"></a>
+    <a href="https://github.com/principia-cloud/principia-cli/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
+  </p>
 </div>
 
 ---
 
-## What can Principia do?
+## What Principia Does
 
-- **Generate simulation code** from plain English descriptions
-- **Read, write, and execute code** across your robotics project with your permission
-- **Configure physics and environments** for NVIDIA Isaac Sim and other simulators
-- **Iterate interactively** — refine your simulation through conversation
-- **Plan before acting** — use Plan mode to discuss architecture, then switch to Act mode to execute
-- **Pipe and script** — integrate into CI/CD pipelines with JSON output and yolo mode
+<table>
+  <tr>
+    <td align="center" valign="top" width="20%">
+      <h4>Prompt to Sim</h4>
+      <sub>Describe a simulation in plain English — Principia writes the code and runs it.</sub>
+    </td>
+    <td align="center" valign="top" width="20%">
+      <h4>Code Execution</h4>
+      <sub>Read, write, and execute code across your entire robotics project with permission.</sub>
+    </td>
+    <td align="center" valign="top" width="20%">
+      <h4>Physics Config</h4>
+      <sub>Configure environments and physics for Isaac Sim and other simulators.</sub>
+    </td>
+    <td align="center" valign="top" width="20%">
+      <h4>Interactive</h4>
+      <sub>Refine simulations through conversation — iterate without restarting.</sub>
+    </td>
+    <td align="center" valign="top" width="20%">
+      <h4>Plan & Act</h4>
+      <sub>Discuss architecture in Plan mode, then execute changes in Act mode.</sub>
+    </td>
+  </tr>
+</table>
+
+## See It in Action
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="img/scene-1.gif" alt="Natural Language to Sim" width="360">
+      <br>
+      <b>Natural Language to Sim</b>
+      <br>
+      <sub>Type a prompt — the agent launches Isaac Sim and spawns a Unitree H1 with full physics.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="img/scene-2.gif" alt="Live Scene Interaction" width="360">
+      <br>
+      <b>Live Scene Interaction</b>
+      <br>
+      <sub>"Add colorful boxes" — the agent generates and injects Python into the active sim.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="img/scene-3.gif" alt="Virtual Sensor Integration" width="360">
+      <br>
+      <b>Virtual Sensor Integration</b>
+      <br>
+      <sub>Attach a camera — the agent mounts an Intel RealSense D435 and starts a ROS 2 stream.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="img/scene-4.gif" alt="Agentic Debugging" width="360">
+      <br>
+      <b>Agentic Debugging</b>
+      <br>
+      <sub>"The orientation looks wrong" — the agent finds the transform error and corrects it live.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="img/scene-5.gif" alt="SOTA Model Integration via MCP" width="360">
+      <br>
+      <b>SOTA Model Integration via MCP</b>
+      <br>
+      <sub>Provide a 2D image — the agent reconstructs it as a 3D mesh and imports it with UsdPhysics.</sub>
+    </td>
+  </tr>
+</table>
+
+### Full Demo
+
+https://github.com/user-attachments/assets/8e44c98a-c6d4-4b21-834c-521e923cb675
 
 ## Quick Install
+
+**macOS / Linux**
 
 ```bash
 curl -fsSL https://principia.cloud/install.sh | bash
 ```
 
-Or install via npm:
+**Windows**
 
-```bash
-npm i -g principia
+```powershell
+irm https://principia.cloud/install.ps1 | iex
 ```
 
-## CLI Usage
+**Or [build from source](DEVELOPMENT.md#quick-start)**
 
-### Interactive Mode (Default)
+## Usage
+
+### Interactive Mode
 
 ```bash
-# Launch interactive mode
 principia
+```
 
-# Run a task directly
+<div align="center">
+  <img src="img/cli-screenshot.png" alt="Principia CLI" width="600">
+</div>
+
+### Run with a Prompt
+
+```bash
 principia "Create a pick-and-place simulation for a UR5 arm"
-
-# With verbose output and extended thinking
-principia -v --thinking "Analyze this simulation codebase"
 ```
 
-### Commands
+See the [Development Guide](DEVELOPMENT.md#cli-reference) for the full CLI reference.
 
-#### `task` (alias: `t`)
+## Resources
 
-Run a new task with a prompt.
+- [Website](https://principia.cloud/agent) — Product page and demos
+- [Discord](https://discord.com/invite/ZrvJpUVK56) — Community support and discussions
+- [GitHub Issues](https://github.com/principia-cloud/principia-cli/issues) — Bug reports and feature requests
+- [Development Guide](DEVELOPMENT.md) — Architecture, CLI reference, and setup
 
-```bash
-principia task "Set up a quadruped robot walking on uneven terrain"
-principia t "Add collision detection to the gripper"
-```
+## Contributing
 
-| Option | Description |
-|--------|-------------|
-| `-a, --act` | Run in act mode (default) |
-| `-p, --plan` | Run in plan mode |
-| `-y, --yolo` | Auto-approve all actions (plain text output) |
-| `-m, --model <model>` | Model to use for the task |
-| `-i, --images <paths...>` | Image file paths to include |
-| `-v, --verbose` | Show verbose output including reasoning |
-| `-c, --cwd <path>` | Working directory for the task |
-| `--config <path>` | Path to configuration directory |
-| `--thinking [tokens]` | Enable extended thinking (default: 1024) |
-| `--json` | Output messages as JSON |
-| `-T, --taskId <id>` | Resume an existing task by ID |
-
-#### `history` (alias: `h`)
-
-List task history with pagination.
-
-```bash
-principia history
-principia history -n 20 -p 2
-```
-
-#### `config`
-
-Show current configuration.
-
-```bash
-principia config
-```
-
-#### `auth`
-
-Authenticate a provider and configure which model to use.
-
-```bash
-# Interactive
-principia auth
-
-# Quick setup
-principia auth -p anthropic -k sk-ant-xxxxx -m claude-sonnet-4-5-20250929
-```
-
-#### `update`
-
-Check for updates and install if available.
-
-```bash
-principia update
-```
-
-### Piped Input
-
-```bash
-cat scene.py | principia "Add a second robot arm to this scene"
-git diff | principia "Review these simulation changes"
-```
-
-### Scripting & Automation
-
-```bash
-# JSON output for parsing
-principia --json "List all robot joints" | jq '.text'
-
-# Yolo mode for CI/CD
-principia -y "Run the test suite and fix failures"
-```
-
-### Resuming Tasks
-
-```bash
-# Get task IDs from history
-principia history
-
-# Resume a task
-principia -T abc123def
-
-# Resume with a follow-up
-principia -T abc123def "Now add unit tests for the changes"
-```
-
-## Configuration
-
-Principia stores its data in `~/.principia/data/` by default:
-
-```
-~/.principia/
-├── data/
-│   ├── globalState.json     # Global settings and state
-│   ├── secrets.json         # API keys and secrets
-│   ├── workspace/           # Workspace-specific state
-│   └── tasks/               # Task history and conversation data
-└── log/                     # Log files
-```
-
-Override with `--config <path>` or the `PRINCIPIA_DIR` environment variable.
-
-### Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `PRINCIPIA_DIR` | Override the default configuration directory |
-| `PRINCIPIA_COMMAND_PERMISSIONS` | JSON config restricting which shell commands Principia can execute |
-
-## Architecture
-
-The CLI directly imports and reuses the core TypeScript codebase. This means feature parity is easy to maintain — when core gets updated, the CLI automatically benefits.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     CLI (cli/)                          │
-│  - React Ink terminal UI                                │
-│  - Command parsing (commander)                          │
-│  - Terminal-specific adapters                           │
-└─────────────────────────────────────────────────────────┘
-                          │
-                          │ direct imports
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│                  Core (src/core/)                       │
-│  - Controller: task lifecycle, state management         │
-│  - Task: AI API calls, tool execution                   │
-│  - StateManager: persistent storage                     │
-│  - Proto types: message definitions                     │
-└─────────────────────────────────────────────────────────┘
-```
-
-The CLI runs everything in a single Node.js process. The "host bridge" pattern provides terminal-appropriate implementations for things the VS Code extension would handle differently (clipboard, file dialogs, etc.).
+We welcome contributions! See our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ## Attribution
 
-Built on top of [Cline](https://github.com/cline/cline) (Apache-2.0).
-
-## Links
-
-- [Website](https://principia.cloud/agent)
-- [Discord](https://discord.com/invite/ZrvJpUVK56)
-- [GitHub Issues](https://github.com/principia-cloud/principia-agent/issues)
+Built on [Cline](https://github.com/cline/cline) (Apache-2.0).
 
 ## License
 
