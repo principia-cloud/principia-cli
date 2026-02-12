@@ -1,50 +1,57 @@
-# Principia CLI — Development Guide
+# Development Guide
 
-The official CLI for Principia. Run Principia tasks directly from the terminal with the same underlying functionality as the core engine.
+## Project Structure
 
-## Features
-
-- **Reuses Core Codebase**: Shares the same Controller, Task, and API handling as the core engine
-- **Terminal Output**: Displays Principia messages directly in your terminal with colored output
-- **Task History**: Access your task history from the command line
-- **Configurable**: Use custom configuration directories and working directories
-- **Image Support**: Attach images to your prompts using file paths or inline references
-
-## Prerequisites
-
-- Node.js 20.x or later
-- npm or yarn
-- The parent Principia project dependencies installed
-
-## Installation
-
-From the repository root:
-
-```bash
-# Install all dependencies first
-npm install
-
-# Ensure protos are generated
-npm run protos
-
-# Build the CLI
-npm run cli:build
 ```
+principia-cli/
+├── cli/              # CLI package (React Ink terminal UI, Commander.js)
+│   ├── src/          # CLI source code
+│   ├── dist/         # Built output
+│   └── package.json
+├── src/
+│   ├── core/         # Controller, Task, StateManager
+│   ├── shared/       # Shared types and utilities
+│   ├── services/     # Auth, telemetry, MCP, error handling
+│   ├── integrations/ # Editor, terminal, external tool integrations
+│   └── generated/    # Proto-generated TypeScript types
+├── proto/            # Protocol buffer definitions
+└── scripts/          # Build and utility scripts
+```
+
+## Quick Start
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/principia-cloud/principia-cli.git
+   cd principia-cli
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+3. **Generate proto types and build**:
+
+   ```bash
+   npm run cli:build
+   ```
+
+4. **Link for local development**:
+
+   ```bash
+   cd cli && npm run link
+   ```
+
+5. **Verify installation**:
+
+   ```bash
+   principia --help
+   ```
 
 ## Development Workflow
-
-### Quick Start
-
-```bash
-# 1. Install all dependencies
-npm install
-
-# 2. Build and link globally so you can run `principia` from anywhere
-cd cli && npm run link
-
-# 3. Test it
-principia --help
-```
 
 ### Scripts
 
@@ -60,15 +67,16 @@ Run these from the repository root:
 
 ### Development Loop
 
-1. Run `npm run cli:dev` — this links the CLI globally and starts watch mode
+1. Run `npm run cli:dev` — links the CLI globally and starts watch mode
 2. Make changes to files in `cli/src/`
 3. The build automatically rebuilds on save
 4. Test your changes by running `principia` in another terminal
 5. When done, run `cd cli && npm run unlink` to clean up
 
-### Proto Generation
+<details>
+<summary>Proto generation</summary>
 
-The CLI uses proto-generated types for message passing. If you modify any `.proto` files, run:
+The CLI uses proto-generated types for message passing. If you modify any `.proto` files:
 
 ```bash
 npm run protos
@@ -76,42 +84,136 @@ npm run protos
 
 This generates TypeScript types in `src/generated/` that both the CLI and core use.
 
-## Publish
+</details>
 
-#### 1. Publish to npm
+## CLI Reference
+
+### Interactive Mode
+
 ```bash
-npm publish
+principia                                    # Launch interactive mode
+principia "Create a simulation for a UR5"    # Run a task directly
+principia -v --thinking "Analyze this code"  # Verbose with extended thinking
 ```
 
-#### 2. Update the Homebrew formula
+### Commands
+
+<details>
+<summary><code>task</code> (alias: <code>t</code>) — Run a task with a prompt</summary>
+
 ```bash
-npm run update-brew-formula
+principia task "Set up a quadruped robot walking on uneven terrain"
+principia t "Add collision detection to the gripper"
 ```
 
-#### 3. Test the formula locally
+| Option | Description |
+|--------|-------------|
+| `-a, --act` | Run in act mode (default) |
+| `-p, --plan` | Run in plan mode |
+| `-y, --yolo` | Auto-approve all actions |
+| `-m, --model <model>` | Model to use |
+| `-i, --images <paths...>` | Image file paths to include |
+| `-v, --verbose` | Show verbose output |
+| `-c, --cwd <path>` | Working directory |
+| `--config <path>` | Configuration directory |
+| `--thinking [tokens]` | Enable extended thinking (default: 1024) |
+| `--json` | Output as JSON |
+| `-T, --taskId <id>` | Resume an existing task |
+
+</details>
+
+<details>
+<summary><code>history</code> (alias: <code>h</code>) — List task history</summary>
+
 ```bash
-# Create a local tap
-brew tap-new principia/local
-cp ./cli/principia.rb "$(brew --repository)/Library/Taps/principia/homebrew-local/Formula/principia.rb"
-
-# Build from source
-brew install --build-from-source principia/local/principia
-
-# Clean up when done
-brew untap principia/local
+principia history
+principia history -n 20 -p 2
 ```
+
+</details>
+
+<details>
+<summary><code>config</code> — Show current configuration</summary>
+
+```bash
+principia config
+```
+
+</details>
+
+<details>
+<summary><code>auth</code> — Authenticate a provider</summary>
+
+```bash
+principia auth                                                         # Interactive
+principia auth -p anthropic -k sk-ant-xxxxx -m claude-sonnet-4-5-20250929  # Quick setup
+```
+
+</details>
+
+<details>
+<summary><code>update</code> — Check for and install updates</summary>
+
+```bash
+principia update
+```
+
+</details>
+
+### Piped Input
+
+```bash
+cat scene.py | principia "Add a second robot arm to this scene"
+git diff | principia "Review these simulation changes"
+```
+
+### Scripting & Automation
+
+```bash
+principia --json "List all robot joints" | jq '.text'    # JSON output
+principia -y "Run the test suite and fix failures"        # Auto-approve for CI/CD
+```
+
+### Resuming Tasks
+
+```bash
+principia history                                         # Get task IDs
+principia -T abc123def                                    # Resume a task
+principia -T abc123def "Now add unit tests"               # Resume with follow-up
+```
+
+## Configuration
+
+Principia stores its data in `~/.principia/data/` by default:
+
+```
+~/.principia/
+├── data/
+│   ├── globalState.json     # Global settings and state
+│   ├── secrets.json         # API keys and secrets
+│   ├── workspace/           # Workspace-specific state
+│   └── tasks/               # Task history and conversation data
+└── log/                     # Log files
+```
+
+Override with `--config <path>` or the `PRINCIPIA_DIR` environment variable.
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `PRINCIPIA_DIR` | Override the default configuration directory |
+| `PRINCIPIA_COMMAND_PERMISSIONS` | JSON config restricting which shell commands Principia can execute |
 
 ## Architecture
 
-### How It Works
-
-The CLI directly imports and reuses the core Principia TypeScript codebase. This means feature parity is easy to maintain — when core gets updated, the CLI automatically benefits.
+The CLI directly imports and reuses the core TypeScript codebase. When core gets updated, the CLI automatically benefits.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     CLI (cli/)                          │
 │  - React Ink terminal UI                                │
-│  - Command parsing (commander)                          │
+│  - Command parsing (Commander.js)                       │
 │  - Terminal-specific adapters                           │
 └─────────────────────────────────────────────────────────┘
                           │
@@ -126,7 +228,7 @@ The CLI directly imports and reuses the core Principia TypeScript codebase. This
 └─────────────────────────────────────────────────────────┘
 ```
 
-Unlike a client-server architecture, the CLI runs everything in a single Node.js process. The "host bridge" pattern provides terminal-appropriate implementations for things like clipboard, file dialogs, etc.
+The CLI runs everything in a single Node.js process. The "host bridge" pattern provides terminal-appropriate implementations for things the VS Code extension handles differently (clipboard, file dialogs, etc.).
 
 ### Key Files
 
@@ -136,34 +238,59 @@ Unlike a client-server architecture, the CLI runs everything in a single Node.js
 | `cli/src/components/App.tsx` | Main React Ink app |
 | `cli/src/components/ChatView.tsx` | Task conversation UI |
 | `cli/src/controllers/CliWebviewProvider.ts` | Bridges core messages to terminal output |
-| `cli/src/vscode-context.ts` | Mock VS Code extension context for core compatibility |
+| `cli/src/vscode-context.ts` | Mock VS Code extension context |
 | `cli/src/vscode-shim.ts` | Shims for VS Code APIs that core depends on |
-| `cli/src/constants/colors.ts` | Terminal color definitions |
 
-### React Ink
+<details>
+<summary>React Ink details</summary>
 
-The CLI uses [React Ink](https://github.com/vadimdemedes/ink) for its terminal UI. This lets us build the interface with React components that render to the terminal. Key patterns:
+The CLI uses [React Ink](https://github.com/vadimdemedes/ink) for its terminal UI. This lets us build the interface with React components that render to the terminal.
 
 - Components in `cli/src/components/` render terminal UI
 - Hooks in `cli/src/hooks/` manage terminal-specific state (size, scrolling)
 - The `useStateSubscriber` hook subscribes to core state changes
 
-## Configuration
+</details>
 
-The CLI stores its data in `~/.principia/data/` by default:
+## Code Formatting
 
-- `globalState.json`: Global settings and state
-- `secrets.json`: API keys and secrets
-- `workspace/`: Workspace-specific state
-- `tasks/`: Task history and conversation data
+This project uses [Biome](https://biomejs.dev/) for formatting and linting. Biome runs automatically during builds — no manual formatting needed.
 
-Override with the `--config` option or `PRINCIPIA_DIR` environment variable.
+## Publishing
+
+### 1. Publish to npm
+
+```bash
+npm publish
+```
+
+### 2. Update the Homebrew formula
+
+```bash
+npm run update-brew-formula
+```
+
+<details>
+<summary>Test Homebrew formula locally</summary>
+
+```bash
+# Create a local tap
+brew tap-new principia/local
+cp ./cli/principia.rb "$(brew --repository)/Library/Taps/principia/homebrew-local/Formula/principia.rb"
+
+# Build from source
+brew install --build-from-source principia/local/principia
+
+# Clean up when done
+brew untap principia/local
+```
+
+</details>
 
 ## Troubleshooting
 
-### Build Errors
-
-If you encounter build errors:
+<details>
+<summary>Build errors</summary>
 
 ```bash
 # Make sure all deps are installed
@@ -176,7 +303,10 @@ npm run protos
 npm run cli:build
 ```
 
-### "command not found: principia"
+</details>
+
+<details>
+<summary>"command not found: principia"</summary>
 
 The CLI isn't linked globally. Run:
 
@@ -184,14 +314,20 @@ The CLI isn't linked globally. Run:
 cd cli && npm run link
 ```
 
-### Changes Not Reflected
+</details>
 
-If your code changes aren't showing up:
+<details>
+<summary>Changes not reflected</summary>
 
 1. Make sure watch mode is running (`npm run cli:dev`)
 2. Check for TypeScript errors in the watch output
 3. Try unlinking and relinking: `cd cli && npm run unlink && npm run link`
 
-### Import Errors from Core
+</details>
+
+<details>
+<summary>Import errors from core</summary>
 
 The CLI imports from `@core/`, `@shared/`, etc. These paths are defined in the root `tsconfig.json`. If you see import errors, make sure you're building from the repo root, not from inside `cli/`.
+
+</details>
