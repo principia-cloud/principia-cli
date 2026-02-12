@@ -111,7 +111,7 @@ irm https://principia.cloud/install.ps1 | iex
 
 ### Full Demo
 
-https://github.com/user-attachments/assets/f52aef79-f6d9-4217-83d8-8411f514f19e
+https://github.com/user-attachments/assets/e6eb150b-890d-4c4a-95f9-0bcbce289223
 
 ## Usage
 
