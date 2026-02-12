@@ -12,7 +12,7 @@
   <p>
     <a href="https://principia.cloud/agent"><img src="https://img.shields.io/badge/principia.cloud-orange" alt="Website"></a>
     <a href="https://discord.com/invite/ZrvJpUVK56"><img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
-    <a href="https://x.com/principia_cloud"><img src="https://img.shields.io/twitter/follow/principia_cloud?style=social" alt="X (Twitter)"></a>
+    <a href="https://x.com/PrincipiaSim"><img src="https://img.shields.io/twitter/follow/PrincipiaSim?style=social" alt="X (Twitter)"></a>
     <a href="https://github.com/principia-cloud/principia-cli"><img src="https://img.shields.io/github/stars/principia-cloud/principia-cli?style=social" alt="GitHub Stars"></a>
     <a href="https://github.com/principia-cloud/principia-cli/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
   </p>
