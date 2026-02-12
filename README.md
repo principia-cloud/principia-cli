@@ -111,7 +111,9 @@ irm https://principia.cloud/install.ps1 | iex
 
 ### Full Demo
 
-https://github.com/principia-cloud/principia-cli/raw/docs/restructure-documentation/img/demo.mp4
+<!-- Replace the URL below with a user-attachments link: drag demo.mp4 into any GitHub issue/PR comment, then paste the generated URL here -->
+
+https://github.com/principia-cloud/principia-cli/releases/download/v0.0.0-demo/demo.mp4
 
 ## Usage
 
