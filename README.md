@@ -111,9 +111,7 @@ irm https://principia.cloud/install.ps1 | iex
 
 ### Full Demo
 
-<!-- Replace the URL below with a user-attachments link: drag demo.mp4 into any GitHub issue/PR comment, then paste the generated URL here -->
-
-https://github.com/principia-cloud/principia-cli/releases/download/v0.0.0-demo/demo.mp4
+https://github.com/user-attachments/assets/f52aef79-f6d9-4217-83d8-8411f514f19e
 
 ## Usage
 
