@@ -111,7 +111,7 @@ irm https://principia.cloud/install.ps1 | iex
 
 ### Full Demo
 
-https://github.com/principia-cloud/principia-cli/raw/main/img/demo.mp4
+https://github.com/principia-cloud/principia-cli/raw/docs/restructure-documentation/img/demo.mp4
 
 ## Usage
 
