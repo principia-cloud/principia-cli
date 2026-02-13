@@ -200,7 +200,7 @@ function Build-CLI {
 # Knowledge base & embedding model
 # ---------------------------------------------------------------------------
 
-$KB_API_URL = "https://2knihjo39k.execute-api.us-east-1.amazonaws.com/dev/kb/presigned-url"
+$KB_API_URL = "https://5ytsk24aud.execute-api.us-east-1.amazonaws.com/dev/kb/presigned-url"
 $KB_SIMULATOR = "isaac_sim"
 
 function Install-KnowledgeBase {
