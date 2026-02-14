@@ -1039,8 +1039,17 @@ def place_floor_objects_dfs(
     if max_duration is None:
         max_duration = max(300, len(objects_list) * 60)
 
+    # Scale grid size with room area to keep search space manageable.
+    # 20cm grid for a typical 4x5m room (~2000 grid points).
+    # For a 36x44m warehouse the same grid would produce ~40k points,
+    # causing combinatorial explosion in the DFS.  Scale up the grid
+    # step so the total number of candidate points stays roughly constant.
+    room_area_cm2 = room.dimensions.width * room.dimensions.length * 1e4  # m² → cm²
+    reference_area_cm2 = 20 * 1e4  # 20 m² reference room
+    grid_size = max(20, int(20 * (room_area_cm2 / reference_area_cm2) ** 0.5))
+
     solver = DFS_Solver_Floor(
-        grid_size=20,
+        grid_size=grid_size,
         max_duration=max_duration,
         room_id=room.id,
     )
