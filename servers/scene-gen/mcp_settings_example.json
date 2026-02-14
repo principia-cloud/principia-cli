@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "scene-gen": {
+      "command": "~/.principia/data/scene-gen/venv/bin/python",
+      "args": ["~/.principia/source/servers/scene-gen/server.py"],
+      "env": {
+        "MATFUSE_CKPT": "~/.principia/data/scene-gen/matfuse/matfuse-full.ckpt",
+        "OBJATHOR_ASSETS_BASE_DIR": "~/.principia/data/scene-gen/objathor",
+        "RESULTS_DIR": "~/.principia/data/scene-gen/results",
+        "QWEN_VL_URL": "https://dashscope-us.aliyuncs.com/compatible-mode/v1",
+        "QWEN_VL_MODEL": "qwen3-vl-30b-a3b-instruct",
+        "QWEN_VL_API_KEY": "sk-your-dashscope-api-key",
+        "TRELLIS_URL": "http://<trellis-host>:8080",
+        "ISAAC_SIM_HOST": "localhost",
+        "ISAAC_SIM_PORT": "8080"
+      },
+      "autoApprove": [
+        "create_room",
+        "add_doors_windows",
+        "get_layout",
+        "get_room_info",
+        "generate_materials",
+        "search_objects",
+        "generate_3d_model",
+        "place_objects",
+        "remove_objects",
+        "analyze_floor_plan",
+        "run_semantic_critic",
+        "build_scene",
+        "simulate_physics_tool",
+        "export_usd_tool",
+        "analyze_shared_walls",
+        "add_connecting_doors",
+        "load_objaverse_object",
+        "export_scene"
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# MatFuse model weights (too large for git)
+matfuse/ckpts/
+.venv/
+__pycache__/
+*.pyc

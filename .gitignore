@@ -4,3 +4,6 @@ cli/dist/
 cli/.cache/
 .DS_Store
 *.tgz
+results/
+__pycache__/
+*.pyc

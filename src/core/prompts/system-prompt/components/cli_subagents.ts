@@ -2,7 +2,7 @@ import { SystemPromptSection } from "../templates/placeholders"
 import { TemplateEngine } from "../templates/TemplateEngine"
 import type { PromptVariant, SystemPromptContext } from "../types"
 
-const getCliSubagentsTemplateText = (_context: SystemPromptContext) => `USING THE CLINE CLI TOOL
+const getCliSubagentsTemplateText = (_context: SystemPromptContext) => `USING THE PRINCIPIA CLI TOOL
 
 The Principia CLI tool can be used to assign Principia AI agents with focused tasks. This can be used to keep you focused by delegating information-gathering and exploration to separate Principia instances. Use the Principia CLI tool to research large codebases, explore file structures, gather information from multiple files, analyze dependencies, or summarize code sections when the complete context may be too large or overwhelming.
 
@@ -15,26 +15,26 @@ Principia AI agents may be referred to as agents, subagents, or subtasks. Reques
 You must use the following command syntax for creating Principia AI agents:
 
 \`\`\`bash
-cline "your prompt here"
+principia "your prompt here"
 \`\`\`
 
 ## Examples of how you might use this tool
 
 \`\`\`bash
 # Find specific patterns
-cline "find all React components that use the useState hook and list their names"
+principia "find all React components that use the useState hook and list their names"
 
 # Analyze code structure
-cline "analyze the authentication flow. Reverse trace through all relevant functions and methods, and provide a summary of how it works. Include file/class references in your summary."
+principia "analyze the authentication flow. Reverse trace through all relevant functions and methods, and provide a summary of how it works. Include file/class references in your summary."
 
 # Gather targeted information
-cline "list all API endpoints and their HTTP methods"
+principia "list all API endpoints and their HTTP methods"
 
 # Summarize directories
-cline "summarize the purpose of all files in the src/services directory"
+principia "summarize the purpose of all files in the src/services directory"
 
 # Research implementations
-cline "find how error handling is implemented across the application"
+principia "find how error handling is implemented across the application"
 \`\`\`
 
 ## Tips

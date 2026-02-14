@@ -1,13 +1,13 @@
 /**
- * Pattern to match simplified Principia CLI syntax: cline "prompt" or cline 'prompt'
+ * Pattern to match simplified Principia CLI syntax: cline/principia "prompt" or cline/principia 'prompt'
  * with optional additional flags after the closing quote
  */
-const CLINE_COMMAND_PATTERN = /^cline\s+(['"])(.+?)\1(\s+.*)?$/
+const CLINE_COMMAND_PATTERN = /^(cline|principia)\s+(['"])(.+?)\2(\s+.*)?$/
 
 /**
  * Detects if a command is a Principia CLI subagent command.
  *
- * Matches the simplified syntax: cline "prompt" or cline 'prompt'
+ * Matches the simplified syntax: cline/principia "prompt" or cline/principia 'prompt'
  * This allows the system to apply subagent-specific settings like autonomous execution.
  *
  * @param command - The command string to check
@@ -15,19 +15,19 @@ const CLINE_COMMAND_PATTERN = /^cline\s+(['"])(.+?)\1(\s+.*)?$/
  */
 export function isSubagentCommand(command: string): boolean {
 	// Match simplified syntaxes
-	// cline "prompt"
-	// cline 'prompt'
+	// cline "prompt" / principia "prompt"
+	// cline 'prompt' / principia 'prompt'
 	return CLINE_COMMAND_PATTERN.test(command)
 }
 
 /**
  * Transforms simplified Principia CLI command syntax with subagent settings.
  *
- * Converts: cline "prompt" or cline 'prompt'
- * To: cline "prompt" --json -y
+ * Converts: cline/principia "prompt" or cline/principia 'prompt'
+ * To: cline/principia "prompt" --json -y
  *
  * Preserves additional flags like --cwd:
- * cline "prompt" --cwd ./path → cline "prompt" --json -y --cwd ./path
+ * principia "prompt" --cwd ./path → principia "prompt" --json -y --cwd ./path
  *
  * This enables autonomous subagent execution with proper CLI flags for automation.
  *
@@ -61,11 +61,12 @@ function injectSubagentSettings(command: string): string {
 	const match = command.match(CLINE_COMMAND_PATTERN)
 
 	if (match) {
-		const quote = match[1]
-		const prompt = match[2]
-		const additionalFlags = match[3] || ""
+		const cmd = match[1]
+		const quote = match[2]
+		const prompt = match[3]
+		const additionalFlags = match[4] || ""
 		const prePromptPart = prePromptFlags.length > 0 ? prePromptFlags.join(" ") + " " : ""
-		return `cline ${prePromptPart}${quote}${prompt}${quote} ${postPromptFlags.join(" ")}${additionalFlags}`
+		return `${cmd} ${prePromptPart}${quote}${prompt}${quote} ${postPromptFlags.join(" ")}${additionalFlags}`
 	}
 
 	// Already full format: just inject settings after prompt
