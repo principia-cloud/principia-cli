@@ -114,8 +114,8 @@ setup_scene_gen() {
 
     if $needs_install; then
         info "Installing Python dependencies (this may take a few minutes)..."
-        "${venv_dir}/bin/pip" install --upgrade pip --cache-dir "${venv_dir}/.pip-cache" --quiet 2>/dev/null || true
-        "${venv_dir}/bin/pip" install -r "$req_file" --cache-dir "${venv_dir}/.pip-cache" --quiet || {
+        PIP_USER=0 "${venv_dir}/bin/pip" install --upgrade pip --cache-dir "${venv_dir}/.pip-cache" --quiet 2>/dev/null || true
+        PIP_USER=0 "${venv_dir}/bin/pip" install -r "$req_file" --cache-dir "${venv_dir}/.pip-cache" --quiet || {
             warn "pip install failed — scene-gen may not work correctly"
             return
         }
