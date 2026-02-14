@@ -6,11 +6,11 @@
 import { Box, Text, useApp, useInput } from "ink"
 import Spinner from "ink-spinner"
 // biome-ignore lint/style/useImportType: React is used as a value by JSX (jsx: "react" in tsconfig)
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { StateManager } from "@/core/storage/StateManager"
 import { openAiCodexOAuthManager } from "@/integrations/openai-codex/oauth"
 import { AuthService } from "@/services/auth/AuthService"
-import { liteLlmDefaultModelId, openAiCodexDefaultModelId, openRouterDefaultModelId } from "@/shared/api"
+import { claudeCodeModels, liteLlmDefaultModelId, openAiCodexDefaultModelId, openRouterDefaultModelId } from "@/shared/api"
 import { openExternal } from "@/utils/env"
 import { COLORS } from "../constants/colors"
 import { useStdinContext } from "../context/StdinContext"
@@ -48,6 +48,8 @@ type AuthStep =
 	| "openai_codex_auth"
 	| "bedrock"
 	| "import"
+	| "claude_code"
+	| "claude_code_model"
 
 interface AuthViewProps {
 	controller: any
@@ -153,8 +155,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 	const [step, setStep] = useState<AuthStep>("menu")
 	const [selectedProvider, setSelectedProvider] = useState<string>(
 		StateManager.get().getApiConfiguration().actModeApiProvider ||
-			StateManager.get().getApiConfiguration().planModeApiProvider ||
-			"",
+		StateManager.get().getApiConfiguration().planModeApiProvider ||
+		"",
 	)
 	const [apiKey, setApiKey] = useState("")
 	const [modelId, setModelId] = useState("")
@@ -167,6 +169,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 	const [importSources, setImportSources] = useState<DetectedSources>({ codex: false, opencode: false })
 	const [importSource, setImportSource] = useState<ImportSource | null>(null)
 	const [bedrockConfig, setBedrockConfig] = useState<BedrockConfig | null>(null)
+	const [claudeCodeChecking, setClaudeCodeChecking] = useState(false)
+	const [claudeCodeError, setClaudeCodeError] = useState<string | null>(null)
+	const [claudeCodeModelIndex, setClaudeCodeModelIndex] = useState(0)
+	const claudeCodeModelIds = useRef(Object.keys(claudeCodeModels))
 
 	// OCA auth hook - enabled when step is oca_auth
 	const handleOcaAuthSuccess = useCallback(async () => {
@@ -193,7 +199,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 
 	// Main menu items - conditionally include import options
 	const mainMenuItems: SelectItem[] = useMemo(() => {
-		const items: SelectItem[] = [{ label: "Sign in with Cline", value: "cline_auth" }]
+		// Claude Code first - recommended option, uses existing Claude Code installation
+		const items: SelectItem[] = [{ label: "Use Claude Code", value: "claude_code" }]
+
+		items.push({ label: "Sign in with Cline", value: "cline_auth" })
 
 		// Add OpenAI Codex option for ChatGPT subscribers
 		items.push({ label: "Sign in with ChatGPT Subscription", value: "openai_codex_auth" })
@@ -313,6 +322,48 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 		}
 	}, [])
 
+	// Start Claude Code setup
+	const startClaudeCodeSetup = useCallback(async () => {
+		setStep("claude_code")
+		setClaudeCodeChecking(true)
+		setClaudeCodeError(null)
+
+		try {
+			// Check if 'claude' binary is available
+			const { execa } = await import("execa")
+			await execa("claude", ["--version"], { timeout: 5000 })
+
+			// Claude Code is available, go to model selection
+			setClaudeCodeChecking(false)
+			setStep("claude_code_model")
+		} catch {
+			setClaudeCodeChecking(false)
+			setClaudeCodeError(
+				"Claude Code is not installed or not in your PATH.\n" +
+				"Install it from: https://docs.anthropic.com/en/docs/claude-code/getting-started",
+			)
+		}
+	}, [])
+
+	// Handle Claude Code model selection
+	const handleClaudeCodeModelSelect = useCallback(
+		async (selectedModelId: string) => {
+			try {
+				await applyProviderConfig({ providerId: "claude-code", modelId: selectedModelId, controller })
+				const stateManager = StateManager.get()
+				stateManager.setGlobalState("welcomeViewCompleted", true)
+				await stateManager.flushPendingState()
+				setSelectedProvider("claude-code")
+				setModelId(selectedModelId)
+				setStep("success")
+			} catch (error) {
+				setErrorMessage(error instanceof Error ? error.message : String(error))
+				setStep("error")
+			}
+		},
+		[controller],
+	)
+
 	// Start Cline auth flow
 	const startClineAuth = useCallback(async () => {
 		try {
@@ -338,6 +389,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 				onComplete?.()
 			} else if (value === "cline_auth") {
 				startClineAuth()
+			} else if (value === "claude_code") {
+				startClaudeCodeSetup()
 			} else if (value === "openai_codex_auth") {
 				setStep("openai_codex_auth")
 				startOpenAiCodexAuth()
@@ -351,7 +404,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 				setStep("import")
 			}
 		},
-		[exit, onComplete, startClineAuth, startOpenAiCodexAuth],
+		[exit, onComplete, startClineAuth, startClaudeCodeSetup, startOpenAiCodexAuth],
 	)
 
 	const handleProviderSelect = useCallback(
@@ -548,6 +601,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 				setClineModelIndex(0)
 				setStep("menu")
 				break
+			case "claude_code":
+				setClaudeCodeError(null)
+				setStep("menu")
+				break
+			case "claude_code_model":
+				setClaudeCodeModelIndex(0)
+				setStep("menu")
+				break
 			case "bedrock":
 				setBedrockConfig(null)
 				setStep("provider")
@@ -731,6 +792,54 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 					/>
 				)
 
+			case "claude_code":
+				if (claudeCodeChecking) {
+					return (
+						<Box flexDirection="column">
+							<Box>
+								<Text color={COLORS.primaryBlue}>
+									<Spinner type="dots" />
+								</Text>
+								<Text color="white"> Checking for Claude Code installation...</Text>
+							</Box>
+						</Box>
+					)
+				}
+				if (claudeCodeError) {
+					return (
+						<Box flexDirection="column">
+							<Text bold color="red">
+								Claude Code not found
+							</Text>
+							<Text> </Text>
+							<Text color="yellow">{claudeCodeError}</Text>
+							<Text> </Text>
+							<Text color="gray">Esc to go back</Text>
+						</Box>
+					)
+				}
+				return null
+
+			case "claude_code_model": {
+				const models = claudeCodeModelIds.current
+				return (
+					<Box flexDirection="column">
+						<Text color="white">Choose a Claude Code model</Text>
+						<Text> </Text>
+						{models.map((id, index) => (
+							<Box key={id}>
+								<Text color={index === claudeCodeModelIndex ? COLORS.primaryBlue : undefined}>
+									{index === claudeCodeModelIndex ? "❯ " : "  "}
+									{id}
+								</Text>
+							</Box>
+						))}
+						<Text> </Text>
+						<Text color="gray">Use arrow keys, Enter to select, Esc to go back</Text>
+					</Box>
+				)
+			}
+
 			case "import":
 				if (!importSource) {
 					return null
@@ -768,6 +877,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 		"oca_auth",
 		"cline_model",
 		"openai_codex_auth",
+		"claude_code",
+		"claude_code_model",
 		"bedrock",
 		"error",
 	].includes(step)
@@ -819,10 +930,24 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 						}
 					}
 				}
+			} else if (step === "claude_code_model") {
+				const models = claudeCodeModelIds.current
+				const maxIndex = models.length - 1
+
+				if (key.upArrow) {
+					setClaudeCodeModelIndex((prev) => (prev > 0 ? prev - 1 : maxIndex))
+				} else if (key.downArrow) {
+					setClaudeCodeModelIndex((prev) => (prev < maxIndex ? prev + 1 : 0))
+				} else if (key.return) {
+					const selectedModel = models[claudeCodeModelIndex]
+					if (selectedModel) {
+						handleClaudeCodeModelSelect(selectedModel)
+					}
+				}
 			}
 			// Note: modelid step input is handled by ModelPicker component
 		},
-		{ isActive: isRawModeSupported && (step === "menu" || step === "provider" || step === "cline_model" || canGoBack) },
+		{ isActive: isRawModeSupported && (step === "menu" || step === "provider" || step === "cline_model" || step === "claude_code_model" || canGoBack) },
 	)
 
 	return (
@@ -858,7 +983,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 										{index === menuIndex ? "❯ " : "  "}
 										{item.label}
 									</Text>
-									{item.value === "cline_auth" && <Text color="yellow"> (try Opus 4.6!)</Text>}
+									{item.value === "claude_code" && <Text color="yellow"> (Recommended!)</Text>}
+									{item.value === "cline_auth"}
 								</Text>
 							</Box>
 						))}
