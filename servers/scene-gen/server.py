@@ -432,6 +432,19 @@ async def generate_materials(layout_id: str, material_descriptions: str) -> str:
         return results
 
     results = await asyncio.to_thread(_generate)
+
+    # Update room state so export can find the textures.
+    # Matches SAGE: room.floor_material = "{room_id}_floor", wall.material = "{room_id}_wall"
+    for room_id, surfaces in descs.items():
+        room = state.get_room(layout_id, room_id)
+        if room is None:
+            continue
+        if "floor" in surfaces:
+            room.floor_material = f"{room_id}_floor_material"
+        if "wall" in surfaces:
+            for wall in room.walls:
+                wall.material = f"{room_id}_wall_material"
+
     return json.dumps(results)
 
 
