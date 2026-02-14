@@ -849,11 +849,14 @@ async function checkAnyProviderConfigured(): Promise<boolean> {
 	}
 
 	// Check provider-specific settings that indicate configuration
-	// (for providers that don't require API keys like Bedrock with IAM, Ollama, LM Studio)
+	// (for providers that don't require API keys like Bedrock with IAM, Ollama, LM Studio, Claude Code)
 	if (config.awsRegion) return true
 	if (config.vertexProjectId) return true
 	if (config.ollamaBaseUrl) return true
 	if (config.lmStudioBaseUrl) return true
+
+	// Check if Claude Code is configured as the provider (no API key needed)
+	if (config.actModeApiProvider === "claude-code" || config.planModeApiProvider === "claude-code") return true
 
 	return false
 }
