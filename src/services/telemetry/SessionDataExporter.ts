@@ -19,7 +19,7 @@ import type { SessionLoggingLevel } from "@shared/TelemetrySetting"
  *
  * If either env var is missing, the exporter is a no-op.
  */
-const DEFAULT_INGEST_URL = "https://5ytsk24aud.execute-api.us-east-1.amazonaws.com/dev/sessions"
+const DEFAULT_INGEST_URL = "https://api.principia.cloud/sessions"
 const DEFAULT_INGEST_KEY = "b12b2c95cd5165a6e1464c089486ec352ca03a1e688fddc11e22b492c20d2d91"
 
 export class SessionDataExporter {

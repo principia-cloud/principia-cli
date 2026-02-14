@@ -169,7 +169,7 @@ build() {
 # Knowledge base & embedding model
 # ---------------------------------------------------------------------------
 
-KB_API_URL="https://5ytsk24aud.execute-api.us-east-1.amazonaws.com/dev/kb/presigned-url"
+KB_API_URL="https://api.principia.cloud/kb/presigned-url"
 KB_SIMULATOR="isaac_sim"
 
 setup_kb() {
