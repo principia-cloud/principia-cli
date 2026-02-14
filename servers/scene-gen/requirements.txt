@@ -18,6 +18,7 @@ numpy
 networkx
 scipy
 matplotlib
+usd-core
 
 # Optional: GPU-accelerated rendering (auto-detected at runtime)
 # Install on machines with CUDA GPU for best mesh rendering quality.
