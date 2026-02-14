@@ -99,8 +99,9 @@ setup_scene_gen() {
         info "pip not found in venv — bootstrapping via ensurepip / get-pip.py..."
         "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null || {
             # ensurepip unavailable — fall back to get-pip.py
+            # PIP_USER=0 overrides Debian's global pip.conf (user=true)
             curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/_get_pip.py \
-                && "${venv_dir}/bin/python" /tmp/_get_pip.py --quiet \
+                && PIP_USER=0 "${venv_dir}/bin/python" /tmp/_get_pip.py --quiet \
                 && rm -f /tmp/_get_pip.py \
                 || {
                     warn "Could not install pip into venv — skipping scene-gen setup"
