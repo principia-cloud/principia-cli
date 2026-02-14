@@ -119,6 +119,21 @@ get_github_token() {
 download_source() {
     local source_dir="${PRINCIPIA_HOME}/source"
 
+    if $USE_LOCAL; then
+        local script_dir
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        local repo_dir
+        repo_dir="$(dirname "$script_dir")"   # parent of scripts/
+
+        if [ -d "$source_dir" ] && [ ! -L "$source_dir" ]; then
+            rm -rf "$source_dir"
+        fi
+        mkdir -p "$(dirname "$source_dir")"
+        ln -sfn "$repo_dir" "$source_dir"
+        ok "Using local source → ${repo_dir}"
+        return
+    fi
+
     if [ -d "$source_dir" ]; then
         info "Removing previous installation..."
         rm -rf "$source_dir"
@@ -284,6 +299,18 @@ configure_path() {
 # ---------------------------------------------------------------------------
 
 main() {
+    # --- Flag parsing ---
+    SKIP_SKILL_SETUP=false
+    USE_LOCAL=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --skip-skill-setup) SKIP_SKILL_SETUP=true ;;
+            --branch)           shift; REPO_BRANCH="$1" ;;
+            --local)            USE_LOCAL=true ;;
+        esac
+        shift
+    done
+
     printf '\n'
     printf '  \033[1;38;5;45m██████╗ ██████╗ ██╗███╗   ██╗ ██████╗██╗██████╗ ██╗ █████╗ \033[0m\n'
     printf '  \033[1;38;5;39m██╔══██╗██╔══██╗██║████╗  ██║██╔════╝██║██╔══██╗██║██╔══██╗\033[0m\n'
@@ -302,12 +329,22 @@ main() {
     download_source
     build
     setup_kb
+
+    if ! $SKIP_SKILL_SETUP; then
+        source "${PRINCIPIA_HOME}/source/scripts/setup-scene-gen.sh"
+        setup_scene_gen
+    fi
+
     create_symlink
     configure_path
 
     printf '\n'
     printf '  \033[1;32m✅ Installation complete!\033[0m\n\n'
     printf '  Run \033[1;32mprincipia\033[0m to get started.\n'
+    if ! $SKIP_SKILL_SETUP; then
+        printf '  Configure scene-gen API keys in:\n'
+        printf '    \033[0;37m~/.principia/data/settings/principia_mcp_settings.json\033[0m\n'
+    fi
     printf '  If the command is not found, restart your shell:\n'
     printf '    \033[0;37mexec $SHELL\033[0m\n\n'
 }

@@ -1,0 +1,25 @@
+mcp[cli]>=1.9.4
+torch>=2.2.0
+open-clip-torch==2.32.0
+sentence-transformers==4.1.0
+trimesh>=4.0
+pyrender>=0.1.45
+shapely>=2.0
+rtree>=1.0
+Pillow>=9.5
+openai>=1.0
+requests
+loguru
+compress-json
+compress-pickle
+diffusers>=0.30
+accelerate>=0.33
+numpy
+networkx
+scipy
+matplotlib
+
+# Optional: GPU-accelerated rendering (auto-detected at runtime)
+# Install on machines with CUDA GPU for best mesh rendering quality.
+# pip install nvdiffrast
+# nvdiffrast

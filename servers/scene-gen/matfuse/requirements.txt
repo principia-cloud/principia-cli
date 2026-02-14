@@ -1,0 +1,16 @@
+# MatFuse inference dependencies (modern versions)
+omegaconf
+einops
+transformers
+kornia
+pytorch-lightning
+torchmetrics
+albumentations
+opencv-python
+extcolors
+Pylette
+sentence-transformers
+torch
+torchvision
+-e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
+-e git+https://github.com/openai/CLIP.git@main#egg=clip
