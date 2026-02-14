@@ -113,7 +113,20 @@ irm https://principia.cloud/install.ps1 | iex
 
 **Or [build from source](DEVELOPMENT.md#quick-start)**
 
-## Usage
+## Set Up
+
+Principia supports your favorite LLMs, model providers and API keys.
+
+Principia works best with **Claude 4.6 Opus**; we recommend accessing this model via your **Claude Code** subscription.
+
+**You don't have a Claude Code subscription?** Get a free Claude Code subscription on us for testing Principia! -> [fill out this form](https://docs.google.com/forms/d/e/1FAIpQLScet06zVcxfU-PhEiyHUrTBWha5_MjXd7n0-uj5VVLbIteyHw/viewform).
+
+If you would like to try Principia with a free LLM (Worse performance), you can do so by selecting "Login with Cline" and choose one of the FREE models available (e.g. KIMI K2)
+
+<img width="644" height="513" alt="Screenshot 2026-02-13 at 7 25 21 PM" src="https://github.com/user-attachments/assets/c3b89011-9822-4e2a-9014-49b06ea3dbfd" />
+
+
+## Usage 
 
 ### Interactive Mode
 
