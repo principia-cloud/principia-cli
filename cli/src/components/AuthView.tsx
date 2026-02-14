@@ -199,10 +199,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 
 	// Main menu items - conditionally include import options
 	const mainMenuItems: SelectItem[] = useMemo(() => {
-		const items: SelectItem[] = [{ label: "Sign in with Cline", value: "cline_auth" }]
+		// Claude Code first - recommended option, uses existing Claude Code installation
+		const items: SelectItem[] = [{ label: "Use Claude Code", value: "claude_code" }]
 
-		// Add Claude Code option - uses existing Claude Code installation
-		items.push({ label: "Use Claude Code", value: "claude_code" })
+		items.push({ label: "Sign in with Cline", value: "cline_auth" })
 
 		// Add OpenAI Codex option for ChatGPT subscribers
 		items.push({ label: "Sign in with ChatGPT Subscription", value: "openai_codex_auth" })
@@ -983,8 +983,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ controller, onComplete, onEr
 										{index === menuIndex ? "❯ " : "  "}
 										{item.label}
 									</Text>
-									{item.value === "cline_auth" && <Text color="yellow"> (try Opus 4.6!)</Text>}
-									{item.value === "claude_code" && <Text color="magenta"> (use your existing auth)</Text>}
+									{item.value === "claude_code" && <Text color="yellow"> (Recommended!)</Text>}
+									{item.value === "cline_auth"}
 								</Text>
 							</Box>
 						))}
