@@ -85,28 +85,30 @@ setup_scene_gen() {
             warn "On Debian/Ubuntu you may need: sudo apt install python3-venv"
             return
         }
-        # On Debian/Ubuntu, venv may be created without pip if ensurepip is
-        # missing (packaged separately as python3.X-venv). Bootstrap it.
-        if [ ! -f "${venv_dir}/bin/pip" ]; then
-            info "pip not found in venv — bootstrapping via ensurepip / get-pip.py..."
-            "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null || {
-                # ensurepip unavailable — fall back to get-pip.py
-                curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/_get_pip.py \
-                    && "${venv_dir}/bin/python" /tmp/_get_pip.py --quiet \
-                    && rm -f /tmp/_get_pip.py \
-                    || {
-                        warn "Could not install pip into venv — skipping scene-gen setup"
-                        warn "On Debian/Ubuntu: sudo apt install python3-venv python3-pip"
-                        return
-                    }
-            }
-        fi
         needs_install=true
     elif [ ! -f "$hash_file" ] || [ "$(cat "$hash_file" 2>/dev/null)" != "$current_hash" ]; then
         info "Requirements changed — reinstalling dependencies..."
         needs_install=true
     else
         ok "Python venv up to date (requirements unchanged)"
+    fi
+
+    # On Debian/Ubuntu, venv may be created without pip if ensurepip is
+    # missing (packaged separately as python3.X-venv). Bootstrap it.
+    if [ -d "$venv_dir" ] && [ ! -f "${venv_dir}/bin/pip" ]; then
+        info "pip not found in venv — bootstrapping via ensurepip / get-pip.py..."
+        "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null || {
+            # ensurepip unavailable — fall back to get-pip.py
+            curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/_get_pip.py \
+                && "${venv_dir}/bin/python" /tmp/_get_pip.py --quiet \
+                && rm -f /tmp/_get_pip.py \
+                || {
+                    warn "Could not install pip into venv — skipping scene-gen setup"
+                    warn "On Debian/Ubuntu: sudo apt install python3-venv python3-pip"
+                    return
+                }
+        }
+        needs_install=true
     fi
 
     if $needs_install; then
