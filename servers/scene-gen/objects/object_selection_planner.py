@@ -172,10 +172,9 @@ def process_single_object(object_name: str, object_info: dict, room: Room, objec
                 Image.fromarray((texture * 255).astype(np.uint8)).save(texture_save_path)
             
             tex_coords = candidate["tex_coords"]
-            tex_coords_save_path = os.path.join(object_save_dir, f"{obj.source}", f"{obj.source_id}_tex_coords.pkl")
+            tex_coords_save_path = os.path.join(object_save_dir, f"{obj.source}", f"{obj.source_id}_tex_coords.npz")
             if not os.path.exists(tex_coords_save_path):
-                with open(tex_coords_save_path, 'wb') as f:    
-                    pickle.dump(tex_coords, f)
+                np.savez(tex_coords_save_path, vts=tex_coords["vts"], fts=tex_coords["fts"])
             
             if "pbr_parameters" in candidate:
                 pbr_parameters = candidate["pbr_parameters"]

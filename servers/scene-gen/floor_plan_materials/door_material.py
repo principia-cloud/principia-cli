@@ -75,7 +75,7 @@ class DoorMaterialSelector:
         os.makedirs(os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures"), exist_ok=True)
         for door_id, door_frame_id in zip(self.door_ids, self.door_data_single_doorframe_ids):
             texture_image_save_path = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_id}_texture.png")
-            tex_coords_save_path = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_id}_tex_coords.pkl")
+            tex_coords_save_path = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_id}_tex_coords.npz")
 
             if not os.path.exists(texture_image_save_path) or not os.path.exists(tex_coords_save_path):
                 door_image_path = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/images", f"{door_id}.png")
@@ -174,11 +174,7 @@ class DoorMaterialSelector:
                 fts = np.array(unique_fts, dtype=np.int32)
 
                 # save the texture image and tex coords
-                tex_coords_dict = {
-                    "vts": vts, # np array of shape (N, 2)
-                    "fts": fts, # np array of shape (M, 3)
-                }
-                compress_pickle.dump(tex_coords_dict, tex_coords_save_path)
+                np.savez(tex_coords_save_path, vts=vts, fts=fts)
                 Image.fromarray((door_texture_image * 255).astype(np.uint8)).save(texture_image_save_path)
 
 

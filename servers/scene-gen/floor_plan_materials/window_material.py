@@ -753,14 +753,10 @@ class WindowMaterialGenerator:
         texture_image_pil.save(texture_path)
         
         # Save texture coordinates
-        coords_path = f"{save_path_prefix}_tex_coords.pkl"
-        tex_coords_dict = {
-            "vts": window_material["vts"],
-            "fts": window_material["fts"],
-            "grid_layout": window_material["grid_layout"],
-            "dimensions": window_material["dimensions"]
-        }
-        compress_pickle.dump(tex_coords_dict, coords_path)
+        coords_path = f"{save_path_prefix}_tex_coords.npz"
+        np.savez(coords_path,
+                 vts=window_material["vts"],
+                 fts=window_material["fts"])
         
         return {
             "texture_path": texture_path,

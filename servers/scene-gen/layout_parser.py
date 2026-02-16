@@ -90,7 +90,7 @@ def _generate_procedural_door_texture(description: str, texture_path: str, coord
 
     vts = np.array(unique_vts, dtype=np.float32)
     fts = np.array(unique_fts, dtype=np.int32)
-    compress_pickle.dump({"vts": vts, "fts": fts}, coords_path)
+    np.savez(coords_path, vts=vts, fts=fts)
 
 
 def create_door_frame_material(door_texture_path: str, frame_texture_path: str, frame_coords_path: str):
@@ -241,11 +241,7 @@ def create_door_frame_material(door_texture_path: str, frame_texture_path: str, 
         assert fts.shape[0] == len(temp_combined_frame.faces), f"fts shape {fts.shape[0]} doesn't match mesh faces {len(temp_combined_frame.faces)}"
         
         # Save the texture image and coordinates
-        tex_coords_dict = {
-            "vts": vts,  # np array of shape (N, 2)
-            "fts": fts,  # np array of shape (M, 3)
-        }
-        compress_pickle.dump(tex_coords_dict, frame_coords_path)
+        np.savez(frame_coords_path, vts=vts, fts=fts)
         Image.fromarray((frame_texture_image * 255).astype(np.uint8)).save(frame_texture_path)
         
         print(f"Created door frame material: texture={frame_texture_path}, coords={frame_coords_path}", file=sys.stderr)
@@ -414,23 +410,26 @@ def add_doors_windows_to_floor_plan(current_floor_plan: FloorPlan, doors_windows
                             # Copy material files to save directory
                             from floor_plan_materials.door_material import HOLODECK_BASE_DATA_DIR
                             source_texture_path = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_material_id}_texture.png")
-                            source_coords_path = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_material_id}_tex_coords.pkl")
+                            source_coords_path_npz = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_material_id}_tex_coords.npz")
+                            source_coords_path_pkl = os.path.join(HOLODECK_BASE_DATA_DIR, "doors/textures", f"{door_material_id}_tex_coords.pkl")
 
                             dest_texture_path = os.path.join(door_material_save_dir, f"{door_material_id}_texture.png")
-                            dest_coords_path = os.path.join(door_material_save_dir, f"{door_material_id}_tex_coords.pkl")
+                            dest_coords_path = os.path.join(door_material_save_dir, f"{door_material_id}_tex_coords.npz")
 
                             try:
                                 if os.path.exists(source_texture_path):
                                     shutil.copy2(source_texture_path, dest_texture_path)
-                                if os.path.exists(source_coords_path):
-                                    shutil.copy2(source_coords_path, dest_coords_path)
+                                if os.path.exists(source_coords_path_npz):
+                                    shutil.copy2(source_coords_path_npz, dest_coords_path)
+                                elif os.path.exists(source_coords_path_pkl):
+                                    shutil.copy2(source_coords_path_pkl, dest_coords_path.replace(".npz", ".pkl"))
                             except Exception as e:
                                 print(f"Warning: Could not copy door material files for {door_material_id}: {e}", file=sys.stderr)
                         else:
                             # Fallback: generate procedural door texture
                             door_material_id = f"procedural_door_{j}"
                             dest_texture_path = os.path.join(door_material_save_dir, f"{door_material_id}_texture.png")
-                            dest_coords_path = os.path.join(door_material_save_dir, f"{door_material_id}_tex_coords.pkl")
+                            dest_coords_path = os.path.join(door_material_save_dir, f"{door_material_id}_tex_coords.npz")
 
                             if not os.path.exists(dest_texture_path) or not os.path.exists(dest_coords_path):
                                 _generate_procedural_door_texture(
@@ -439,7 +438,7 @@ def add_doors_windows_to_floor_plan(current_floor_plan: FloorPlan, doors_windows
 
                         # Create door frame texture using average color of door texture
                         door_frame_texture_path = os.path.join(door_material_save_dir, f"{door_material_id}_frame_texture.png")
-                        door_frame_coords_path = os.path.join(door_material_save_dir, f"{door_material_id}_frame_tex_coords.pkl")
+                        door_frame_coords_path = os.path.join(door_material_save_dir, f"{door_material_id}_frame_tex_coords.npz")
 
                         if not os.path.exists(door_frame_texture_path) or not os.path.exists(door_frame_coords_path):
                             create_door_frame_material(dest_texture_path, door_frame_texture_path, door_frame_coords_path)

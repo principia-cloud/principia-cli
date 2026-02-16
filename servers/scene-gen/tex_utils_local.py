@@ -18,6 +18,21 @@ import numpy as np
 import os
 import xatlas
 from typing import Dict
+import pickle
+
+
+def _load_tex_coords(base_path):
+    """Load texture coordinates from .npz (preferred) or .pkl (legacy)."""
+    npz_path = base_path if base_path.endswith(".npz") else base_path.replace(".pkl", ".npz")
+    pkl_path = base_path if base_path.endswith(".pkl") else base_path.replace(".npz", ".pkl")
+    if os.path.exists(npz_path):
+        data = np.load(npz_path, allow_pickle=False)
+        return {k: data[k] for k in data.files}
+    if os.path.exists(pkl_path):
+        with open(pkl_path, "rb") as f:
+            return pickle.load(f)
+    return None
+
 
 def dict_to_room(room_data: dict) -> Room:
     """
@@ -766,8 +781,6 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan, layout_dir: str):
     Args:
         layout: FloorPlan object to export
     """
-    import os
-    import pickle
 
     def get_object_mesh(source, source_id):
         object_save_path = f"{layout_dir}/{source}/{source_id}.ply"
@@ -775,13 +788,12 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan, layout_dir: str):
             return trimesh.load(object_save_path)
         else:
             return None
-        
+
     def get_object_mesh_texture(source, source_id):
         tex_coords_save_path = f"{layout_dir}/{source}/{source_id}_tex_coords.pkl"
         texture_map_path = f"{layout_dir}/{source}/{source_id}_texture.png"
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(tex_coords_save_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
@@ -789,7 +801,7 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan, layout_dir: str):
             }
         else:
             return None
-    
+
     mesh_info_dict = {}
 
     # Collections for different mesh types
@@ -851,8 +863,7 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan, layout_dir: str):
 
             window_mesh_texture_map_path = f"{layout_dir}/materials/{window_id}_texture.png"
             window_mesh_tex_coords_save_path = f"{layout_dir}/materials/{window_id}_tex_coords.pkl"
-            with open(window_mesh_tex_coords_save_path, "rb") as f:
-                window_mesh_tex_coords = pickle.load(f)
+            window_mesh_tex_coords = _load_tex_coords(window_mesh_tex_coords_save_path)
 
             mesh_info_dict[f"{window_id}"] = {
                 "mesh": window_mesh,
@@ -962,8 +973,7 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan, layout_dir: str):
             door_mesh_texture_map_path = f"{layout_dir}/materials/{door.door_material}_texture.png"
 
             door_mesh_tex_coords_save_path = f"{layout_dir}/materials/{door.door_material}_tex_coords.pkl"
-            with open(door_mesh_tex_coords_save_path, "rb") as f:
-                door_mesh_tex_coords = pickle.load(f)
+            door_mesh_tex_coords = _load_tex_coords(door_mesh_tex_coords_save_path)
 
             texture_info = {
                 "vts": door_mesh_tex_coords["vts"],
@@ -983,14 +993,12 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan, layout_dir: str):
             # Use door-specific frame texture based on door material
             door_frame_texture_map_path = f"{layout_dir}/materials/{door.door_material}_frame_texture.png"
             door_frame_tex_coords_save_path = f"{layout_dir}/materials/{door.door_material}_frame_tex_coords.pkl"
-            
-            # Check if door frame texture files exist, if not use door material as fallback
-            if not os.path.exists(door_frame_tex_coords_save_path):
+
+            # Try loading door frame tex coords; fall back to door material
+            door_frame_tex_coords = _load_tex_coords(door_frame_tex_coords_save_path)
+            if door_frame_tex_coords is None:
                 door_frame_texture_map_path = door_mesh_texture_map_path
-                door_frame_tex_coords_save_path = door_mesh_tex_coords_save_path
-            
-            with open(door_frame_tex_coords_save_path, "rb") as f:
-                door_frame_tex_coords = pickle.load(f)
+                door_frame_tex_coords = door_mesh_tex_coords
 
             door_frame_texture_info = {
                 "vts": door_frame_tex_coords["vts"],
@@ -1020,24 +1028,21 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
     Args:
         layout: FloorPlan object to export
     """
-    import os
-    import pickle
 
     layout_save_dir = RESULTS_DIR
-    
+
     def get_object_mesh(source, source_id, layout_id):
         object_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}.ply"
         if os.path.exists(object_save_path):
             return trimesh.load(object_save_path)
         else:
             return None
-        
+
     def get_object_mesh_texture(source, source_id, layout_id):
         tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(tex_coords_save_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
@@ -1045,10 +1050,9 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
             }
         else:
             return None
-    
+
     mesh_info_dict = {}
 
-    
     # Track processed bidirectional doors/windows to avoid duplicates
     processed_doors = set()
     processed_windows = set()
@@ -1103,8 +1107,7 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
 
         window_mesh_texture_map_path = f"{layout_save_dir}/{layout.id}/materials/{window_id}_texture.png"
         window_mesh_tex_coords_save_path = f"{layout_save_dir}/{layout.id}/materials/{window_id}_tex_coords.pkl"
-        with open(window_mesh_tex_coords_save_path, "rb") as f:
-            window_mesh_tex_coords = pickle.load(f)
+        window_mesh_tex_coords = _load_tex_coords(window_mesh_tex_coords_save_path)
 
         mesh_info_dict[f"{window_id}"] = {
             "mesh": window_mesh,
@@ -1209,8 +1212,7 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
             door_mesh_texture_map_path = f"{layout_save_dir}/{layout.id}/materials/{door.door_material}_texture.png"
 
             door_mesh_tex_coords_save_path = f"{layout_save_dir}/{layout.id}/materials/{door.door_material}_tex_coords.pkl"
-            with open(door_mesh_tex_coords_save_path, "rb") as f:
-                door_mesh_tex_coords = pickle.load(f)
+            door_mesh_tex_coords = _load_tex_coords(door_mesh_tex_coords_save_path)
 
             texture_info = {
                 "vts": door_mesh_tex_coords["vts"],
@@ -1230,14 +1232,12 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
             # Use door-specific frame texture based on door material
             door_frame_texture_map_path = f"{layout_save_dir}/{layout.id}/materials/{door.door_material}_frame_texture.png"
             door_frame_tex_coords_save_path = f"{layout_save_dir}/{layout.id}/materials/{door.door_material}_frame_tex_coords.pkl"
-            
-            # Check if door frame texture files exist, if not use door material as fallback
-            if not os.path.exists(door_frame_tex_coords_save_path):
+
+            # Try loading door frame tex coords; fall back to door material
+            door_frame_tex_coords = _load_tex_coords(door_frame_tex_coords_save_path)
+            if door_frame_tex_coords is None:
                 door_frame_texture_map_path = door_mesh_texture_map_path
-                door_frame_tex_coords_save_path = door_mesh_tex_coords_save_path
-            
-            with open(door_frame_tex_coords_save_path, "rb") as f:
-                door_frame_tex_coords = pickle.load(f)
+                door_frame_tex_coords = door_mesh_tex_coords
 
             door_frame_texture_info = {
                 "vts": door_frame_tex_coords["vts"],
@@ -1383,24 +1383,20 @@ def _simple_planar_uv_mapping(mesh: trimesh.Trimesh) -> dict:
 
 def get_textured_object_mesh(layout, room, room_id, object_id):
 
-    import os
-    import pickle
-
     layout_save_dir = RESULTS_DIR
-    
+
     def get_object_mesh(source, source_id, layout_id):
         object_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}.ply"
         if os.path.exists(object_save_path):
             return trimesh.load(object_save_path)
         else:
             return None
-        
+
     def get_object_mesh_texture(source, source_id, layout_id):
         tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(tex_coords_save_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
@@ -1408,7 +1404,6 @@ def get_textured_object_mesh(layout, room, room_id, object_id):
             }
         else:
             return None
-    
 
     target_room = room
     if target_room is None:
@@ -1435,24 +1430,20 @@ def get_textured_object_mesh(layout, room, room_id, object_id):
 
 def get_textured_object_mesh_from_layout_id(layout_id, room, room_id, object_id):
 
-    import os
-    import pickle
-
     layout_save_dir = RESULTS_DIR
-    
+
     def get_object_mesh(source, source_id, layout_id):
         object_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}.ply"
         if os.path.exists(object_save_path):
             return trimesh.load(object_save_path)
         else:
             return None
-        
+
     def get_object_mesh_texture(source, source_id, layout_id):
         tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(tex_coords_save_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
@@ -1460,7 +1451,6 @@ def get_textured_object_mesh_from_layout_id(layout_id, room, room_id, object_id)
             }
         else:
             return None
-    
 
     target_room = room
     if target_room is None:
@@ -1486,24 +1476,21 @@ def get_textured_object_mesh_from_layout_id(layout_id, room, room_id, object_id)
     return mesh_info_dict
 
 def get_textured_object_mesh_from_object(layout: FloorPlan, object: Object):
-    import os
-    import pickle
 
     layout_save_dir = RESULTS_DIR
-    
+
     def get_object_mesh(source, source_id, layout_id):
         object_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}.ply"
         if os.path.exists(object_save_path):
             return trimesh.load(object_save_path)
         else:
             return None
-        
+
     def get_object_mesh_texture(source, source_id, layout_id):
         tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(tex_coords_save_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],

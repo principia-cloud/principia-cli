@@ -32,13 +32,34 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(isaac_ext_dir
 
 # SERVER_ROOT_DIR: where "results/" lives.
 # Prefer SCENE_GEN_DATA_DIR env var (set by principia installer), fall back to
-# walking up from the extension directory (works when the extension lives inside
-# the sage repo at sage/server/isaacsim/).
-_default_root = os.path.dirname(os.path.dirname(os.path.dirname(isaac_ext_dir)))
-if os.path.basename(_default_root) == "main":
-    _default_root = os.path.join(_default_root, "server")
+# ~/.principia/data/scene-gen (the standard install location).
+_default_root = os.path.join(os.path.expanduser("~"), ".principia", "data", "scene-gen")
 SERVER_ROOT_DIR = os.environ.get("SCENE_GEN_DATA_DIR", _default_root)
 print("SERVER_ROOT_DIR:", SERVER_ROOT_DIR)
+
+def _load_tex_coords(base_path):
+    """Load texture coordinates from .npz (preferred) or .pkl (legacy) file.
+
+    Args:
+        base_path: Path prefix without extension, e.g. ".../source_id_tex_coords"
+
+    Returns:
+        dict with "vts" and "fts" numpy arrays, or None if not found.
+    """
+    import pickle
+    npz_path = base_path + ".npz"
+    pkl_path = base_path + ".pkl"
+    if os.path.exists(npz_path):
+        data = np.load(npz_path, allow_pickle=False)
+        return {k: data[k] for k in data.files}
+    if os.path.exists(pkl_path):
+        try:
+            with open(pkl_path, "rb") as f:
+                return pickle.load(f)
+        except Exception:
+            return None
+    return None
+
 
 def dict_to_room(room_data: dict) -> Room:
     """
@@ -718,28 +739,26 @@ def export_layout_to_mesh_dict_list(layout: FloorPlan):
         return None
         
     def get_object_mesh_texture(source, source_id, layout_id, mesh=None):
-        tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
+        base_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
         if not os.path.exists(texture_map_path):
             return None
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(base_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        elif mesh is not None:
+        if mesh is not None:
             tex_coords = create_wall_mesh_tex_coords(mesh)
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        else:
-            return None
-    
+        return None
+
     mesh_info_dict = {}
 
     # Collections for different mesh types
@@ -1001,38 +1020,26 @@ def export_layout_to_mesh_dict_list_no_object_transform(layout: FloorPlan):
         return None
         
     def get_object_mesh_texture(source, source_id, layout_id, mesh=None):
-        tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
+        base_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
         texture_pbr_params_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_pbr_parameters.json"
         if not os.path.exists(texture_map_path):
             return None
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
-            tex_dict = {
-                "vts": tex_coords["vts"],
-                "fts": tex_coords["fts"],
-                "texture_map_path": texture_map_path
-            }
-            if os.path.exists(texture_pbr_params_path):
-                with open(texture_pbr_params_path, "r") as f:
-                    pbr_parameters = json.load(f)
-                tex_dict["pbr_parameters"] = pbr_parameters
-            return tex_dict
-        elif mesh is not None:
+        tex_coords = _load_tex_coords(base_path)
+        if tex_coords is None and mesh is not None:
             tex_coords = create_wall_mesh_tex_coords(mesh)
-            tex_dict = {
-                "vts": tex_coords["vts"],
-                "fts": tex_coords["fts"],
-                "texture_map_path": texture_map_path
-            }
-            if os.path.exists(texture_pbr_params_path):
-                with open(texture_pbr_params_path, "r") as f:
-                    pbr_parameters = json.load(f)
-                tex_dict["pbr_parameters"] = pbr_parameters
-            return tex_dict
-        else:
+        if tex_coords is None:
             return None
+        tex_dict = {
+            "vts": tex_coords["vts"],
+            "fts": tex_coords["fts"],
+            "texture_map_path": texture_map_path
+        }
+        if os.path.exists(texture_pbr_params_path):
+            with open(texture_pbr_params_path, "r") as f:
+                pbr_parameters = json.load(f)
+            tex_dict["pbr_parameters"] = pbr_parameters
+        return tex_dict
     
     mesh_info_dict = {}
 
@@ -1400,21 +1407,24 @@ def _simple_planar_uv_mapping(mesh: trimesh.Trimesh) -> dict:
     }
 
 
-def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str):
+def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str, layout_save_dir: str = None):
     """
     Export a FloorPlan object to a mesh file using trimesh.
     Creates gray boxes for walls/floors, red boxes for doors, blue boxes for windows,
     and includes actual object meshes with their transforms.
     Uses boolean operations to cut door/window openings in walls.
-    
+
     Args:
         layout: FloorPlan object to export
+        room_id: ID of the room to export
+        layout_save_dir: Directory containing layout results. If None, derived from SERVER_ROOT_DIR.
     """
     import os
     import pickle
     # from constants import SERVER_ROOT_DIR
-    
-    layout_save_dir = os.path.join(SERVER_ROOT_DIR, "results/")
+
+    if layout_save_dir is None:
+        layout_save_dir = os.path.join(SERVER_ROOT_DIR, "results/")
 
     def get_object_mesh(source, source_id, layout_id):
         for ext in (".ply", ".obj"):
@@ -1424,28 +1434,26 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
         return None
         
     def get_object_mesh_texture(source, source_id, layout_id, mesh=None):
-        tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
+        base_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
         if not os.path.exists(texture_map_path):
             return None
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(base_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        elif mesh is not None:
+        if mesh is not None:
             tex_coords = create_wall_mesh_tex_coords(mesh)
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        else:
-            return None
-    
+        return None
+
     mesh_info_dict = {}
 
     # Track processed bidirectional doors/windows to avoid duplicates
@@ -1454,7 +1462,7 @@ def export_single_room_layout_to_mesh_dict_list(layout: FloorPlan, room_id: str)
 
     # Process each room
     room = next(room for room in layout.rooms if room.id == room_id)
-    
+
     # Create floor mesh
     floor_mesh = create_floor_mesh(room)
     floor_mesh_texture_map_path = f"{layout_save_dir}/{layout.id}/materials/{room.floor_material}.png"
@@ -1709,28 +1717,26 @@ def export_single_room_layout_to_mesh_dict_list_from_room(room: Room, layout_id:
         return None
         
     def get_object_mesh_texture(source, source_id, layout_id, mesh=None):
-        tex_coords_save_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords.pkl"
+        base_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_tex_coords"
         texture_map_path = f"{layout_save_dir}/{layout_id}/{source}/{source_id}_texture.png"
         if not os.path.exists(texture_map_path):
             return None
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(base_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        elif mesh is not None:
+        if mesh is not None:
             tex_coords = create_wall_mesh_tex_coords(mesh)
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        else:
-            return None
-    
+        return None
+
     mesh_info_dict = {}
 
     # Track processed bidirectional doors/windows to avoid duplicates
@@ -1984,27 +1990,25 @@ def get_single_object_mesh_info_dict(scene_save_dir, source, source_id):
         return None
 
     def get_object_mesh_texture(source, source_id, mesh=None):
-        tex_coords_save_path = f"{scene_save_dir}/{source}/{source_id}_tex_coords.pkl"
+        base_path = f"{scene_save_dir}/{source}/{source_id}_tex_coords"
         texture_map_path = f"{scene_save_dir}/{source}/{source_id}_texture.png"
         if not os.path.exists(texture_map_path):
             return None
-        if os.path.exists(tex_coords_save_path):
-            with open(tex_coords_save_path, "rb") as f:
-                tex_coords = pickle.load(f)
+        tex_coords = _load_tex_coords(base_path)
+        if tex_coords is not None:
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        elif mesh is not None:
+        if mesh is not None:
             tex_coords = create_wall_mesh_tex_coords(mesh)
             return {
                 "vts": tex_coords["vts"],
                 "fts": tex_coords["fts"],
                 "texture_map_path": texture_map_path
             }
-        else:
-            return None
+        return None
 
     obj_mesh = get_object_mesh(source, source_id)
     if obj_mesh is not None:

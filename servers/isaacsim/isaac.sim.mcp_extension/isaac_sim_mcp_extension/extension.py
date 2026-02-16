@@ -697,7 +697,9 @@ class MCPExtension(omni.ext.IExt):
             floor_plan = dict_to_floor_plan(layout_data)
             current_layout = floor_plan
             
-            mesh_info_dict = export_single_room_layout_to_mesh_dict_list(current_layout, room_id)
+            # Pass the results directory so mesh loading doesn't depend on SCENE_GEN_DATA_DIR env var
+            layout_results_dir = os.path.dirname(scene_save_dir) + "/"
+            mesh_info_dict = export_single_room_layout_to_mesh_dict_list(current_layout, room_id, layout_save_dir=layout_results_dir)
 
             stage = Usd.Stage.CreateInMemory()
 

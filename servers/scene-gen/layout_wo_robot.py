@@ -84,7 +84,8 @@ from isaacsim.isaac_mcp.server import (
     create_physics_scene,
     get_room_layout_scene_usd,
     create_single_room_layout_scene,
-    get_room_layout_scene_usd_separate_from_layout
+    get_room_layout_scene_usd_separate_from_layout,
+    execute_script,
 )
 import copy
 from foundation_models import get_clip_models
@@ -2778,6 +2779,87 @@ async def get_layout_save_dir() -> str:
         "success": True,
         "layout_save_dir": os.path.abspath(str(Path(RESULTS_DIR) / f"{current_layout.id}"))
     })
+
+
+@mcp.tool()
+async def load_scene_in_isaac_sim(room_id: str) -> str:
+    """
+    Load the current scene into Isaac Sim for visualization.
+
+    This exports the layout to JSON and creates the USD scene inside Isaac Sim
+    via the MCP extension. Use this after all placement iterations are complete
+    to visualize the final scene. Only needed when the physics critic is disabled
+    (the physics critic loads the scene automatically).
+
+    Args:
+        room_id: The ID of the room to load into Isaac Sim.
+
+    Returns:
+        A dictionary indicating success or failure.
+    """
+    global current_layout
+
+    if current_layout is None:
+        return json.dumps({
+            "success": False,
+            "error": "No layout has been generated yet. Use 'generate_room_layout()' first."
+        })
+
+    target_room = next((r for r in current_layout.rooms if r.id == room_id), None)
+    if target_room is None:
+        return json.dumps({
+            "success": False,
+            "error": f"Room with ID '{room_id}' not found"
+        })
+
+    output_path = str(Path(RESULTS_DIR) / f"{current_layout.id}")
+
+    # Remove over-ceiling objects before export
+    ceiling_height = target_room.ceiling_height
+    for room in current_layout.rooms:
+        if room.id == room_id:
+            room.objects = [
+                obj for obj in room.objects
+                if obj.position.z + obj.dimensions.height <= ceiling_height
+            ]
+
+    # Export layout to JSON
+    export_layout_to_json(current_layout, os.path.join(output_path, f"{current_layout.id}.json"))
+
+    # Load into Isaac Sim
+    result = create_single_room_layout_scene(output_path, room_id)
+
+    if result.get('status') == 'success':
+        # Add scene lighting and physics scene
+        execute_script("""
+from pxr import UsdLux, UsdGeom, UsdPhysics, Gf
+import omni.usd
+stage = omni.usd.get_context().get_stage()
+
+# Lighting
+dome = UsdLux.DomeLight.Define(stage, "/World/DomeLight")
+dome.CreateIntensityAttr(500)
+dome.CreateColorAttr(Gf.Vec3f(1.0, 0.95, 0.9))
+distant = UsdLux.DistantLight.Define(stage, "/World/DistantLight")
+distant.CreateIntensityAttr(3000)
+distant.CreateAngleAttr(1.0)
+distant.CreateColorAttr(Gf.Vec3f(1.0, 0.98, 0.95))
+xform = UsdGeom.Xformable(distant.GetPrim())
+xform.AddRotateXYZOp().Set(Gf.Vec3f(-45, 30, 0))
+
+# Physics scene with gravity (Z-up)
+physics_scene = UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
+physics_scene.CreateGravityDirectionAttr(Gf.Vec3f(0, 0, -1))
+physics_scene.CreateGravityMagnitudeAttr(9.81)
+""")
+
+    return json.dumps({
+        "success": result.get('status') == 'success',
+        "room_id": room_id,
+        "layout_id": current_layout.id,
+        "isaac_sim_result": result
+    })
+
 
 @mcp.tool()
 async def get_room_information(room_id: str):

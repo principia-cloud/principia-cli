@@ -7,6 +7,8 @@ description: Generate simulation-ready 3D indoor scenes from natural language de
 
 You are operating the SAGE scene generation pipeline. This pipeline uses **9 composite MCP tools** that handle internal orchestration (LLM reasoning, object retrieval, placement solving, rendering, critics). Follow the stages below **in order**.
 
+> **CRITICAL: You MUST use the scene-gen MCP tools listed below to generate scenes. DO NOT use `isaacExec`, `execute_python`, or write USD/Python code directly to create or place objects. The scene-gen tools produce simulation-ready scenes with real 3D assets, generated textures, and quality critics. Direct scripting produces only untextured primitives and bypasses the entire pipeline.**
+
 > **Each tool is self-contained.** `generate_room_layout` handles room generation + validation + materials + doors/windows internally. `place_objects_in_room` handles object selection + retrieval + placement + critics internally. You orchestrate the high-level flow; the tools handle the details.
 
 ---
@@ -89,19 +91,27 @@ Examples:
 
 ---
 
-## Stage 5: Export
+## Stage 5: Export & Load into Isaac Sim
 
 **Tool:** `get_layout_save_dir()` — Get the output directory path.
 
-The scene is saved automatically during the placement iterations. Report to the user:
+**Tool:** `load_scene_in_isaac_sim(room_id)` — Load the final scene into Isaac Sim for visualization.
+
+The scene is saved automatically during the placement iterations. After all placement is complete:
+
+1. Call `get_layout_save_dir()` to get the output path.
+2. If the physics critic did **not** run during placement (i.e., no `physics_critic_info` was returned in any `place_objects_in_room` response), call `load_scene_in_isaac_sim(room_id)` for each room to load the scene into Isaac Sim. If the physics critic **did** run, the scene is already loaded — skip this step.
+
+Report to the user:
 - Layout ID and room type(s)
 - Total objects placed per room
 - Final critic rating
 - Output directory path
+- Whether the scene was loaded into Isaac Sim
 
 ---
 
-## Quick Reference: All 9 Tools
+## Quick Reference: All 10 Tools
 
 | Tool | Purpose |
 |------|---------|
@@ -114,6 +124,7 @@ The scene is saved automatically during the placement iterations. Report to the 
 | `get_room_information(room_id)` | Get room info with visualization |
 | `move_one_object_with_condition_in_room(room_id, condition)` | Move/reposition a single object |
 | `get_layout_save_dir()` | Get the layout save directory path |
+| `load_scene_in_isaac_sim(room_id)` | Load scene into Isaac Sim (use when physics critic is disabled) |
 
 ---
 
