@@ -10,7 +10,7 @@ import numpy as np
 import uuid
 import shutil
 import random
-from typing import Optional
+from typing import Optional, List
 
 # Resolve paths relative to this file
 _MATFUSE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -58,36 +58,30 @@ def pseudo_render_texture_map(albedo, roughness, normal_map, light_dir=np.array(
     return rendered_map
 
 
-def generate_texture_map_from_prompt(prompt: str) -> Image.Image:
-    """Generate an albedo texture map from a text prompt.
-
-    Args:
-        prompt: Material description (e.g. "warm oak hardwood planks").
-
-    Returns:
-        PIL Image of the albedo map (512x512).
-    """
+def _run_and_extract_albedo(render_emb=None, palette_source=None, sketch=None,
+                            prompt="", direct_palette=False):
+    """Shared helper: run MatFuse generation and return the albedo as PIL Image."""
     from utils.inference_helpers import run_generation
 
     model = _get_model()
-
     save_dir = os.path.join("/tmp/matfuse_texture_map", str(uuid.uuid4()))
     os.makedirs(save_dir, exist_ok=True)
 
     try:
         result_tex = run_generation(
             model,
-            input_image_emb=None,
-            input_image_palette=None,
-            sketch=None,
+            render_emb=render_emb,
+            palette_source=palette_source,
+            sketch=sketch,
             prompt=prompt,
             num_samples=1,
             image_resolution=512,
             ddim_steps=50,
             seed=random.randint(0, 1_000_000),
-            eta=0.0,
-            guidance_scale=10.0,
+            ddim_eta=0.0,
+            ucg_scale=10.0,
             save_dir=save_dir,
+            direct_palette=direct_palette,
         )[-1]
 
         H, W = result_tex.shape[0] // 2, result_tex.shape[1] // 2
@@ -95,3 +89,45 @@ def generate_texture_map_from_prompt(prompt: str) -> Image.Image:
         return Image.fromarray(albedo)
     finally:
         shutil.rmtree(save_dir, ignore_errors=True)
+
+
+def generate_texture_map_from_prompt(prompt: str) -> Image.Image:
+    """Generate an albedo texture map from a text prompt."""
+    return _run_and_extract_albedo(prompt=prompt)
+
+
+def generate_texture_map_from_prompt_and_sketch(prompt: str, sketch) -> Image.Image:
+    """Generate an albedo texture map from a text prompt and edge/sketch map."""
+    return _run_and_extract_albedo(prompt=prompt, sketch=sketch)
+
+
+def generate_texture_map_from_prompt_and_sketch_and_image(prompt: str, sketch, image) -> Image.Image:
+    """Generate an albedo texture map from a text prompt, sketch, and reference image."""
+    return _run_and_extract_albedo(render_emb=image, sketch=sketch, prompt=prompt)
+
+
+def generate_texture_map_from_prompt_and_color(prompt: str, color: List[int]) -> Image.Image:
+    """Generate an albedo texture map conditioned on a text prompt and an RGB color.
+
+    Args:
+        prompt: Material description.
+        color: RGB list [r, g, b] in 0-255 range.
+    """
+    import torch
+    # Build a 5-color palette tensor from the single color (all same)
+    c = torch.tensor(color[:3], dtype=torch.float32).reshape(1, 3) / 255.0
+    palette = c.repeat(5, 1)  # shape (5, 3)
+    return _run_and_extract_albedo(prompt=prompt, palette_source=palette, direct_palette=True)
+
+
+def generate_texture_map_from_prompt_and_color_and_sketch(prompt: str, color: List[int], sketch) -> Image.Image:
+    """Generate an albedo texture map from prompt, color, and sketch."""
+    import torch
+    c = torch.tensor(color[:3], dtype=torch.float32).reshape(1, 3) / 255.0
+    palette = c.repeat(5, 1)
+    return _run_and_extract_albedo(prompt=prompt, palette_source=palette, sketch=sketch, direct_palette=True)
+
+
+def generate_texture_map_from_prompt_and_color_palette(prompt: str, palette_source) -> Image.Image:
+    """Generate an albedo texture map from prompt and a color palette image/source."""
+    return _run_and_extract_albedo(prompt=prompt, palette_source=palette_source)

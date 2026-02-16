@@ -1,98 +1,138 @@
 # Scene Generation MCP Server
 
-A Python MCP server for principia-cli that generates simulation-ready 3D indoor environments from natural language descriptions. Inspired by NVIDIA's SAGE framework.
+Generate simulation-ready 3D indoor scenes from natural language descriptions. Uses 9 composite MCP tools that internally orchestrate LLM reasoning, 3D object retrieval, constraint-based placement, texture generation, and quality critics.
 
-## Architecture
-
-```
-principia-cli (coordinator + subagents)
-    │
-    │ stdio (MCP)
-    ▼
-MCP Server (Python, local)
-    ├── HTTP ──────► Qwen3-VL (remote A4000, port 8080)
-    ├── HTTP ──────► TRELLIS (Docker, port 8080)
-    ├── TCP ───────► Isaac Sim (localhost)
-    ├── in-process ► Flux/MatFuse (GPU or CPU offload)
-    ├── in-process ► CLIP + SBERT (CPU)
-    └── local disk ► Objaverse assets
-```
-
-## Setup
+## Quick Start
 
 ```bash
-cd servers/scene-gen
+# Full setup (from principia-cli root)
+./scripts/setup-scene-gen.sh
+
+# Or manual
 pip install -r requirements.txt
+```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design.
+
+## How It Works
+
+```
+User: "Generate a cozy 4m x 5m bedroom with warm modern style"
+    │
+    │  principia CLI orchestrates via SKILL.md workflow
+    ▼
+┌─────────────────────────────────────────────────────┐
+│  MCP Server (9 tools, stdio transport)              │
+│                                                     │
+│  1. generate_room_layout(input_text)                │
+│     └─ LLM generates walls → validates → adds       │
+│        materials, doors, windows                     │
+│                                                     │
+│  2. place_objects_in_room(room_id, conditions) x4    │
+│     └─ LLM recommends objects → retrieves 3D models │
+│        → solves placement → runs critics             │
+│                                                     │
+│  3. get_room_information(room_id)                    │
+│     └─ Returns state + top-down visualization        │
+│                                                     │
+│  4. move_one_object_with_condition_in_room(...)      │
+│     └─ Fine-tune individual object positions         │
+└─────────────────────────────────────────────────────┘
+    │
+    ▼
+Output: USD scene, JSON layout, rendered images
 ```
 
 ## Configuration
 
-Add to `~/.principia/data/settings/principia_mcp_settings.json`:
+Environment variables (set in `~/.principia/data/settings/principia_mcp_settings.json`):
 
-```json
-{
-  "scene-gen": {
-    "command": "python",
-    "args": ["servers/scene-gen/server.py"],
-    "cwd": "<principia-cli-root>",
-    "env": {
-      "QWEN_VL_URL": "http://<a4000-host>:8080/v1",
-      "QWEN_VL_MODEL": "Qwen3-VL-30B-A3B-Instruct",
-      "TRELLIS_URL": "http://<trellis-host>:8080",
-      "ISAAC_SIM_HOST": "localhost",
-      "ISAAC_SIM_PORT": "8080",
-      "RESULTS_DIR": "./results"
-    }
-  }
-}
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `QWEN_VL_URL` | Yes | Qwen3-VL API endpoint (OpenAI-compatible) |
+| `QWEN_VL_MODEL` | Yes | Model name (e.g. `qwen3-vl-30b-a3b-instruct`) |
+| `QWEN_VL_API_KEY` | Yes | API key for VLM |
+| `RESULTS_DIR` | No | Output directory (default: `./results`) |
+| `TRELLIS_URL` | No | TRELLIS 3D model generation endpoint |
+| `FLUX_SERVER_URL` | No | Flux image generation endpoint |
+| `MATFUSE_CKPT` | No | MatFuse checkpoint path |
+| `OBJATHOR_ASSETS_BASE_DIR` | No | ObjaThor 3D asset database |
+| `PHYSICS_CRITIC_ENABLED` | No | Enable Isaac Sim physics critic (`true`/`false`) |
+| `SEMANTIC_CRITIC_ENABLED` | No | Enable VLM semantic critic (`true`/`false`) |
+| `ISAAC_SIM_HOST` | No | Isaac Sim host for physics simulation |
+
+Example config: [`mcp_settings_example.json`](mcp_settings_example.json)
+
+## MCP Tools Reference
+
+| Tool | Arguments | Description |
+|------|-----------|-------------|
+| `generate_room_layout` | `input_text` | Generate room structure + materials + doors/windows |
+| `get_current_layout` | — | Get full layout data structure |
+| `get_room_details` | `room_id` | Get room details with object list |
+| `list_rooms` | — | List all rooms |
+| `get_layout_from_json` | `json_file_path` | Load saved layout |
+| `place_objects_in_room` | `room_id, placement_conditions` | Full object pipeline: select → retrieve → place → critique |
+| `get_room_information` | `room_id` | Room state + visualization |
+| `move_one_object_with_condition_in_room` | `room_id, condition` | Reposition single object |
+| `get_layout_save_dir` | — | Get output directory path |
+
+## Agent Workflow
+
+The principia agent follows the workflow in [`skill/SKILL.md`](skill/SKILL.md):
+
+1. **Stage 1**: `generate_room_layout` — create room from description
+2. **Stage 2**: `get_room_information` — review layout
+3. **Stage 3**: `place_objects_in_room` x4 — furnish iteratively (anchors → combos → surfaces → decor)
+4. **Stage 4**: Review + `move_one_object_with_condition_in_room` — adjust
+5. **Stage 5**: `get_layout_save_dir` — export
+
+## Directory Structure
+
+```
+servers/scene-gen/
+├── server.py                    # Entry point (thin wrapper)
+├── layout_wo_robot.py           # Main MCP server (9 tools)
+├── key.py                       # Env-var configuration adapter
+├── subagent.py                  # principia subprocess for text LLM
+├── vlm.py                       # Central VLM routing (subagent / Qwen3-VL)
+├── llm_client.py                # Room generation prompts
+├── models.py                    # Pydantic data models
+├── constants.py                 # Path constants
+├── validation.py                # Layout validation
+├── correction.py                # LLM-driven corrections
+├── layout_parser.py             # Parse LLM room output
+├── room_solver.py               # DFS constraint placement solver
+├── utils.py                     # Shared utilities
+├── visualizer.py                # Top-down visualization
+├── room_render.py               # 3D room rendering
+├── tex_utils.py                 # UV mapping
+├── tex_utils_local.py           # Local texture utilities
+├── foundation_models.py         # CLIP + SBERT loading
+├── glb_utils.py                 # GLB file processing
+├── objects/                     # Object pipeline (10 files)
+├── floor_plan_materials/        # Texture generation (5 files)
+├── nvdiffrast_rendering/        # GPU rendering (4 files)
+├── isaacsim/                    # Isaac Sim bridge
+├── matfuse/                     # SVBRDF texture model
+├── skill/SKILL.md               # Agent workflow instructions
+├── requirements.txt             # Python dependencies
+├── mcp_settings_example.json    # Example MCP config
+├── ARCHITECTURE.md              # Detailed architecture docs
+└── CLAUDE.md                    # Agent development guide
 ```
 
-## Environment Variables
+## GPU Requirements
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `QWEN_VL_URL` | `http://192.168.1.50:8080/v1` | Qwen3-VL endpoint (OpenAI-compatible) |
-| `QWEN_VL_MODEL` | `Qwen3-VL-30B-A3B-Instruct` | Model name for API calls |
-| `QWEN_VL_API_KEY` | `token-abc123` | API key (often a placeholder for vLLM) |
-| `TRELLIS_URL` | `http://localhost:8080` | TRELLIS 3D generation endpoint |
-| `ISAAC_SIM_HOST` | `localhost` | Isaac Sim extension host |
-| `ISAAC_SIM_PORT` | `8080` | Isaac Sim extension port |
-| `OBJAVERSE_DIR` | `/data/objaverse` | Path to Objaverse assets |
-| `MATFUSE_DIR` | `/path/to/matfuse-sd/src` | MatFuse installation (optional) |
-| `RESULTS_DIR` | `./results` | Where generated scenes are saved |
+The server requires CUDA GPU for:
+- **nvdiffrast**: Differentiable mesh rendering (object attribute inference)
+- **pytorch3d**: 3D model I/O
+- **MatFuse**: SVBRDF texture generation
+- **CLIP**: Object embedding computation
 
-## MCP Tools
-
-### Scene Management
-- `create_room(room_json)` — Create validated room layout
-- `add_doors_windows(layout_id, placement_json)` — Add doors/windows
-- `get_layout(layout_id)` — Get full FloorPlan JSON
-- `get_room_info(layout_id, room_id)` — Get room details + visualization
-
-### Materials
-- `generate_materials(layout_id, material_descriptions)` — Generate PBR textures
-
-### Objects
-- `search_objects(object_specs)` — Search Objaverse models
-- `generate_3d_model(description, target_size)` — Generate via TRELLIS
-- `place_objects(layout_id, room_id, objects_json, constraints_json)` — DFS placement
-- `remove_objects(layout_id, room_id, object_ids)` — Remove objects
-
-### Vision (Qwen3-VL)
-- `analyze_floor_plan(layout_id, prompt)` — Analyze floor plan image
-- `run_semantic_critic(layout_id, room_id)` — Evaluate room quality
-
-### Isaac Sim
-- `build_scene(layout_id, room_id)` — Build scene in Isaac Sim
-- `simulate_physics(layout_id)` — Run physics simulation
-- `export_usd(layout_id, output_path)` — Export as USD
-
-## Testing
-
+Install GPU deps (requires CUDA toolkit / `nvcc`):
 ```bash
-# Standalone server test
-python server.py
-
-# With principia-cli
-principia "Generate a cozy bedroom" --mcp scene-gen
+sudo apt install nvidia-cuda-toolkit
+CUDA_HOME=/usr pip install --no-build-isolation git+https://github.com/NVlabs/nvdiffrast.git
+CUDA_HOME=/usr pip install --no-build-isolation git+https://github.com/facebookresearch/pytorch3d.git
 ```

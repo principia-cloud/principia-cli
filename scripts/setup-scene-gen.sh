@@ -44,6 +44,72 @@ _find_python() {
 }
 
 # ---------------------------------------------------------------------------
+# System dependencies (apt)
+# ---------------------------------------------------------------------------
+_ensure_apt_packages() {
+    local needed=()
+    local pkg
+
+    # nvidia-cuda-toolkit provides nvcc (needed to build nvdiffrast, pytorch3d)
+    if ! command -v nvcc >/dev/null 2>&1; then
+        needed+=(nvidia-cuda-toolkit)
+    fi
+
+    # OpenGL headers (needed by nvdiffrast / pyrender)
+    if ! dpkg -s libegl1-mesa-dev >/dev/null 2>&1; then
+        needed+=(libegl1-mesa-dev)
+    fi
+
+    if [ ${#needed[@]} -eq 0 ]; then
+        ok "System packages already installed"
+        return 0
+    fi
+
+    info "Installing system packages: ${needed[*]}"
+    if command -v sudo >/dev/null 2>&1; then
+        sudo apt-get update -qq && sudo apt-get install -y -qq "${needed[@]}" || {
+            warn "Failed to install apt packages: ${needed[*]}"
+            warn "You may need to install them manually for GPU rendering support."
+            return 1
+        }
+        ok "System packages installed"
+    else
+        warn "sudo not available — cannot install: ${needed[*]}"
+        warn "Install them manually for GPU rendering support."
+        return 1
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# GPU pip packages (need CUDA toolkit for compilation)
+# ---------------------------------------------------------------------------
+_ensure_gpu_pip_packages() {
+    local venv_dir="$1"
+    local pip="${venv_dir}/bin/pip"
+    local python="${venv_dir}/bin/python"
+
+    # Check if GPU is available
+    if ! command -v nvidia-smi >/dev/null 2>&1; then
+        warn "No NVIDIA GPU detected — skipping GPU package installation"
+        warn "nvdiffrast and pytorch3d will not be available"
+        return 0
+    fi
+
+    # nvdiffrast
+    if "$python" -c "import nvdiffrast" 2>/dev/null; then
+        ok "nvdiffrast already installed"
+    else
+        info "Installing nvdiffrast (building from source, may take a few minutes)..."
+        CUDA_HOME=/usr PIP_USER=0 "$pip" install --no-build-isolation \
+            "git+https://github.com/NVlabs/nvdiffrast.git" \
+            --cache-dir "${venv_dir}/.pip-cache" --quiet || {
+            warn "Failed to install nvdiffrast — GPU rendering may not work"
+        }
+    fi
+
+}
+
+# ---------------------------------------------------------------------------
 # Main setup function
 # ---------------------------------------------------------------------------
 setup_scene_gen() {
@@ -60,6 +126,9 @@ setup_scene_gen() {
         warn "scene-gen source not found at ${scene_gen_source} — skipping"
         return
     fi
+
+    # ----- System dependencies -----
+    _ensure_apt_packages
 
     # ----- Python detection -----
     local python_cmd
@@ -123,6 +192,9 @@ setup_scene_gen() {
         ok "Python dependencies installed"
     fi
 
+    # ----- GPU packages (nvdiffrast, pytorch3d — need CUDA compilation) -----
+    _ensure_gpu_pip_packages "$venv_dir"
+
     # ----- Download MatFuse checkpoint (4.3GB) -----
     local matfuse_ckpt="${matfuse_dir}/matfuse-full.ckpt"
     if [ -f "$matfuse_ckpt" ]; then
@@ -174,8 +246,38 @@ setup_scene_gen() {
         fi
     done
 
+    # ----- Download Holodeck base data (doors, materials, windows — ~77MB) -----
+    local holodeck_dir="${SCENE_GEN_DATA_DIR}/objathor/holodeck/2023_09_23"
+    if [ -f "${holodeck_dir}/doors/door-database.json" ]; then
+        ok "Holodeck base data already present"
+    else
+        info "Downloading Holodeck base data (doors, materials, windows — ~77MB)..."
+        "${venv_dir}/bin/python" -c "
+from objathor.dataset.download_holodeck_base_data import DatasetSaveConfig, load_holodeck_base
+dsc = DatasetSaveConfig(VERSION='2023_09_23', BASE_PATH='${SCENE_GEN_DATA_DIR}/objathor')
+load_holodeck_base(dsc)
+" || {
+            warn "Failed to download Holodeck base data — doors and materials will not work"
+            warn "Install objathor and retry: pip install objathor"
+        }
+        if [ -f "${holodeck_dir}/doors/door-database.json" ]; then
+            ok "Holodeck base data downloaded"
+        fi
+    fi
+
     # ----- Create results directory -----
     mkdir -p "$results_dir"
+
+    # ----- Install scene-gen skill -----
+    local skills_dir="${PRINCIPIA_HOME}/skills/scene-gen"
+    local skill_source="${scene_gen_source}/skill/SKILL.md"
+    if [ -f "$skill_source" ]; then
+        mkdir -p "$skills_dir"
+        ln -sf "$skill_source" "${skills_dir}/SKILL.md"
+        ok "scene-gen skill installed → ${skills_dir}/SKILL.md"
+    else
+        warn "SKILL.md not found at ${skill_source} — skill will not be available"
+    fi
 
     # ----- Register MCP server -----
     local settings_dir="${PRINCIPIA_HOME}/data/settings"
@@ -198,27 +300,34 @@ const path = '${mcp_settings_file}';
 let config = {};
 try { config = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
 if (!config.mcpServers) config.mcpServers = {};
+const prev = (config.mcpServers['scene-gen'] || {}).env || {};
 config.mcpServers['scene-gen'] = {
     command: '${venv_dir}/bin/python',
     args: ['${scene_gen_source}/server.py'],
+    timeout: 600,
     env: {
         MATFUSE_CKPT: '${matfuse_dir}/matfuse-full.ckpt',
         OBJATHOR_ASSETS_BASE_DIR: '${SCENE_GEN_DATA_DIR}/objathor',
         RESULTS_DIR: '${results_dir}',
-        QWEN_VL_URL: (config.mcpServers['scene-gen'] || {}).env?.QWEN_VL_URL || 'https://dashscope-us.aliyuncs.com/compatible-mode/v1',
-        QWEN_VL_MODEL: (config.mcpServers['scene-gen'] || {}).env?.QWEN_VL_MODEL || 'qwen3-vl-30b-a3b-instruct',
-        QWEN_VL_API_KEY: (config.mcpServers['scene-gen'] || {}).env?.QWEN_VL_API_KEY || '',
-        TRELLIS_URL: (config.mcpServers['scene-gen'] || {}).env?.TRELLIS_URL || '',
-        ISAAC_SIM_HOST: (config.mcpServers['scene-gen'] || {}).env?.ISAAC_SIM_HOST || 'localhost',
-        ISAAC_SIM_PORT: (config.mcpServers['scene-gen'] || {}).env?.ISAAC_SIM_PORT || '8080'
+        QWEN_VL_URL: prev.QWEN_VL_URL || 'https://dashscope-us.aliyuncs.com/compatible-mode/v1',
+        QWEN_VL_MODEL: prev.QWEN_VL_MODEL || 'qwen3-vl-30b-a3b-instruct',
+        QWEN_VL_API_KEY: prev.QWEN_VL_API_KEY || '',
+        TRELLIS_URL: prev.TRELLIS_URL || '',
+        FLUX_SERVER_URL: prev.FLUX_SERVER_URL || '',
+        PHYSICS_CRITIC_ENABLED: prev.PHYSICS_CRITIC_ENABLED || 'true',
+        SEMANTIC_CRITIC_ENABLED: prev.SEMANTIC_CRITIC_ENABLED || 'true',
+        ISAAC_SIM_HOST: prev.ISAAC_SIM_HOST || 'localhost'
     },
     autoApprove: [
-        'create_room', 'add_doors_windows', 'get_layout', 'get_room_info',
-        'generate_materials', 'search_objects', 'generate_3d_model',
-        'place_objects', 'remove_objects', 'analyze_floor_plan',
-        'run_semantic_critic', 'build_scene', 'simulate_physics_tool',
-        'export_usd_tool', 'analyze_shared_walls', 'add_connecting_doors',
-        'load_objaverse_object', 'export_scene'
+        'generate_room_layout',
+        'get_current_layout',
+        'get_room_details',
+        'list_rooms',
+        'get_layout_from_json',
+        'place_objects_in_room',
+        'get_layout_save_dir',
+        'get_room_information',
+        'move_one_object_with_condition_in_room'
     ]
 };
 fs.writeFileSync(path, JSON.stringify(config, null, 2) + '\n');
@@ -228,6 +337,15 @@ fs.writeFileSync(path, JSON.stringify(config, null, 2) + '\n');
     }
 
     ok "scene-gen MCP server registered"
+
+    # ----- Isaac Sim + MCP extension hint -----
+    if [ -d "/isaac-sim" ]; then
+        printf '\n'
+        info "Isaac Sim detected at /isaac-sim"
+        info "The MCP extension must be enabled for build_scene/physics to work."
+        info "  Launch helper:  ./scripts/launch-isaac-sim.sh"
+        info "  Or manually:    /isaac-sim/isaac-sim.sh --ext-folder ${source_dir}/servers/isaacsim --enable isaac.sim.mcp_extension"
+    fi
 
     printf '\n'
     ok "Scene-gen setup complete!"

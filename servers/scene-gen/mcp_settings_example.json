@@ -3,36 +3,31 @@
     "scene-gen": {
       "command": "~/.principia/data/scene-gen/venv/bin/python",
       "args": ["~/.principia/source/servers/scene-gen/server.py"],
+      "timeout": 600,
       "env": {
-        "MATFUSE_CKPT": "~/.principia/data/scene-gen/matfuse/matfuse-full.ckpt",
-        "OBJATHOR_ASSETS_BASE_DIR": "~/.principia/data/scene-gen/objathor",
         "RESULTS_DIR": "~/.principia/data/scene-gen/results",
         "QWEN_VL_URL": "https://dashscope-us.aliyuncs.com/compatible-mode/v1",
         "QWEN_VL_MODEL": "qwen3-vl-30b-a3b-instruct",
         "QWEN_VL_API_KEY": "sk-your-dashscope-api-key",
         "TRELLIS_URL": "http://<trellis-host>:8080",
+        "FLUX_SERVER_URL": "http://<flux-host>:8080",
+        "PHYSICS_CRITIC_ENABLED": "true",
+        "SEMANTIC_CRITIC_ENABLED": "true",
+        "OBJATHOR_ASSETS_BASE_DIR": "~/.principia/data/scene-gen/objathor",
+        "MATFUSE_CKPT": "~/.principia/data/scene-gen/matfuse/matfuse-full.ckpt",
         "ISAAC_SIM_HOST": "localhost",
         "ISAAC_SIM_PORT": "8080"
       },
       "autoApprove": [
-        "create_room",
-        "add_doors_windows",
-        "get_layout",
-        "get_room_info",
-        "generate_materials",
-        "search_objects",
-        "generate_3d_model",
-        "place_objects",
-        "remove_objects",
-        "analyze_floor_plan",
-        "run_semantic_critic",
-        "build_scene",
-        "simulate_physics_tool",
-        "export_usd_tool",
-        "analyze_shared_walls",
-        "add_connecting_doors",
-        "load_objaverse_object",
-        "export_scene"
+        "generate_room_layout",
+        "get_current_layout",
+        "get_room_details",
+        "list_rooms",
+        "get_layout_from_json",
+        "place_objects_in_room",
+        "get_layout_save_dir",
+        "get_room_information",
+        "move_one_object_with_condition_in_room"
       ]
     }
   }

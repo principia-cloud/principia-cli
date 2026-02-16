@@ -1,26 +1,44 @@
+# Core MCP server
 mcp[cli]>=1.9.4
+
+# LLM / VLM clients
+openai>=1.0
+
+# Deep learning
 torch>=2.2.0
+torchvision
+nvdiffrast
 open-clip-torch==2.32.0
 sentence-transformers==4.1.0
+diffusers>=0.30
+accelerate>=0.33
+
+# 3D / geometry
 trimesh>=4.0
 pyrender>=0.1.45
 shapely>=2.0
 rtree>=1.0
+xatlas
+pygltflib
+open3d
+
+# Image / rendering
 Pillow>=9.5
-openai>=1.0
-requests
-loguru
+opencv-python
+matplotlib
+
+# Data / serialization
+numpy
+scipy
+networkx
 compress-json
 compress-pickle
-diffusers>=0.30
-accelerate>=0.33
-numpy
-networkx
-scipy
-matplotlib
 usd-core
+objathor
 
-# Optional: GPU-accelerated rendering (auto-detected at runtime)
-# Install on machines with CUDA GPU for best mesh rendering quality.
-# pip install nvdiffrast
-# nvdiffrast
+# Utilities
+requests
+loguru
+tqdm
+einops
+omegaconf

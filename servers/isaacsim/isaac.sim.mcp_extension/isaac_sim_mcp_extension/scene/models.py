@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Optional, Dict
+from typing import List, Optional
 from dataclasses import dataclass
 
 
@@ -57,7 +57,6 @@ class Window:
     height: float
     sill_height: float  # height from floor to window sill
     window_type: str = "standard"
-    window_material: str = "standard"
 
 @dataclass
 class Door:
@@ -70,8 +69,8 @@ class Door:
     door_type: str = "standard"
     opens_inward: bool = True
     opening: bool = False # if opening is true, then it is a permanent opening without any actual door at the space
-    door_material: str = "standard"
-    
+    door_material: str = "wood"
+
 @dataclass
 class Object:
     """Represents an object/furniture item in a room."""
@@ -86,7 +85,6 @@ class Object:
     source_id: str # id of the object in the source
     place_id: str # id of the place the object is in; could be a wall (wall_id), a floor (room_id), or another object (object_id)
     place_guidance: str = "Standard placement for the object" # guidance on where to place the object in the room
-    placement_constraints: List[Dict] = None # constraints on the placement of the object
     mass: float = 1.0 # mass of the object in kg
 
 @dataclass
@@ -112,4 +110,3 @@ class FloorPlan:
     building_style: str
     description: str
     created_from_text: str 
-    policy_analysis: Dict = None
