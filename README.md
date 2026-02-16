@@ -134,10 +134,6 @@ If you would like to try Principia with a free LLM (Worse performance), you can 
 principia
 ```
 
-<div align="center">
-  <img src="img/cli-screenshot.png" alt="Principia CLI" width="600">
-</div>
-
 ### Run with a Prompt
 
 ```bash
