@@ -172,7 +172,21 @@ setup_scene_gen() {
     # is installed as a package (common on Debian).
     if [ -d "$venv_dir" ] && ! "${venv_dir}/bin/python" -m pip --version >/dev/null 2>&1; then
         info "pip not found in venv — bootstrapping via ensurepip / get-pip.py..."
-        "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null
+
+        # On Debian/Ubuntu, ensurepip lives in the version-specific
+        # python3.X-venv package (e.g. python3.12-venv), not python3-venv.
+        # Try to install it before attempting ensurepip.
+        if ! "${venv_dir}/bin/python" -c "import ensurepip" 2>/dev/null; then
+            local py_ver
+            py_ver="$("${venv_dir}/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+            local venv_pkg="python${py_ver}-venv"
+            info "ensurepip missing — installing ${venv_pkg}..."
+            if command -v sudo >/dev/null 2>&1; then
+                sudo apt-get update -qq && sudo apt-get install -y -qq "$venv_pkg" || true
+            fi
+        fi
+
+        "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null || true
         # Verify it actually worked — ensurepip can exit 0 without installing
         if ! "${venv_dir}/bin/python" -m pip --version >/dev/null 2>&1; then
             # ensurepip didn't work — fall back to get-pip.py
@@ -182,7 +196,7 @@ setup_scene_gen() {
                 && rm -f /tmp/_get_pip.py \
                 || {
                     warn "Could not install pip into venv — skipping scene-gen setup"
-                    warn "On Debian/Ubuntu: sudo apt install python3-venv python3-pip"
+                    warn "On Debian/Ubuntu: sudo apt install ${venv_pkg:-python3-venv} python3-pip"
                     return
                 }
         fi
