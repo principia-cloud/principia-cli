@@ -1,6 +1,6 @@
 {
-	"name": "principia-agent",
-	"version": "0.1.0",
+	"name": "principia-cli",
+	"version": "0.2.0",
 	"description": "AI agent for building robotics simulations from natural language",
 	"private": true,
 	"type": "module",

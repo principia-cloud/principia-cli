@@ -129,7 +129,7 @@ export class ReportBugHandler implements IToolHandler, IPartialBlockHandler {
 
 				// Use our utility function to create and open the GitHub issue URL
 				// This bypasses VS Code's URI handling issues with special characters
-				await createAndOpenGitHubIssue("principia-cloud", "principia-agent", "bug_report.yml", params)
+				await createAndOpenGitHubIssue("principia-cloud", "principia-cli", "bug_report.yml", params)
 			} catch (error) {
 				Logger.error(`An error occurred while attempting to report the bug: ${error}`)
 			}
