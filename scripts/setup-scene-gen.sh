@@ -85,7 +85,6 @@ _ensure_apt_packages() {
 # ---------------------------------------------------------------------------
 _ensure_gpu_pip_packages() {
     local venv_dir="$1"
-    local pip="${venv_dir}/bin/pip"
     local python="${venv_dir}/bin/python"
 
     # Check if GPU is available
@@ -100,7 +99,7 @@ _ensure_gpu_pip_packages() {
         ok "nvdiffrast already installed"
     else
         info "Installing nvdiffrast (building from source, may take a few minutes)..."
-        CUDA_HOME=/usr PIP_USER=0 "$pip" install --no-build-isolation \
+        CUDA_HOME=/usr PIP_USER=0 "$python" -m pip install --no-build-isolation \
             "git+https://github.com/NVlabs/nvdiffrast.git" \
             --cache-dir "${venv_dir}/.pip-cache" --quiet || {
             warn "Failed to install nvdiffrast — GPU rendering may not work"
@@ -164,10 +163,14 @@ setup_scene_gen() {
 
     # On Debian/Ubuntu, venv may be created without pip if ensurepip is
     # missing (packaged separately as python3.X-venv). Bootstrap it.
-    if [ -d "$venv_dir" ] && [ ! -f "${venv_dir}/bin/pip" ]; then
+    # Use "python -m pip" to check — bin/pip may be absent even when pip
+    # is installed as a package (common on Debian).
+    if [ -d "$venv_dir" ] && ! "${venv_dir}/bin/python" -m pip --version >/dev/null 2>&1; then
         info "pip not found in venv — bootstrapping via ensurepip / get-pip.py..."
-        "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null || {
-            # ensurepip unavailable — fall back to get-pip.py
+        "${venv_dir}/bin/python" -m ensurepip --upgrade 2>/dev/null
+        # Verify it actually worked — ensurepip can exit 0 without installing
+        if ! "${venv_dir}/bin/python" -m pip --version >/dev/null 2>&1; then
+            # ensurepip didn't work — fall back to get-pip.py
             # PIP_USER=0 overrides Debian's global pip.conf (user=true)
             curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/_get_pip.py \
                 && PIP_USER=0 "${venv_dir}/bin/python" /tmp/_get_pip.py --quiet \
@@ -177,14 +180,14 @@ setup_scene_gen() {
                     warn "On Debian/Ubuntu: sudo apt install python3-venv python3-pip"
                     return
                 }
-        }
+        fi
         needs_install=true
     fi
 
     if $needs_install; then
         info "Installing Python dependencies (this may take a few minutes)..."
-        PIP_USER=0 "${venv_dir}/bin/pip" install --upgrade pip --cache-dir "${venv_dir}/.pip-cache" --quiet 2>/dev/null || true
-        PIP_USER=0 "${venv_dir}/bin/pip" install -r "$req_file" --cache-dir "${venv_dir}/.pip-cache" --quiet || {
+        PIP_USER=0 "${venv_dir}/bin/python" -m pip install --upgrade pip --cache-dir "${venv_dir}/.pip-cache" --quiet 2>/dev/null || true
+        PIP_USER=0 "${venv_dir}/bin/python" -m pip install -r "$req_file" --cache-dir "${venv_dir}/.pip-cache" --quiet || {
             warn "pip install failed — scene-gen may not work correctly"
             return
         }

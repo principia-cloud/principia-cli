@@ -7,7 +7,6 @@ openai>=1.0
 # Deep learning
 torch>=2.2.0
 torchvision
-nvdiffrast
 open-clip-torch==2.32.0
 sentence-transformers==4.1.0
 diffusers>=0.30
