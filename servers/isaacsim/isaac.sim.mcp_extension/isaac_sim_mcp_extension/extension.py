@@ -701,17 +701,27 @@ class MCPExtension(omni.ext.IExt):
             layout_results_dir = os.path.dirname(scene_save_dir) + "/"
             mesh_info_dict = export_single_room_layout_to_mesh_dict_list(current_layout, room_id, layout_save_dir=layout_results_dir)
 
-            stage = Usd.Stage.CreateInMemory()
-
-
-            world_base_prim = UsdGeom.Xform.Define(stage, "/World")
-
-            # set default prim to World
-            stage.SetDefaultPrim(stage.GetPrimAtPath("/World"))
+            # Reuse the existing stage if we already have one for this layout,
+            # so that multiple rooms accumulate instead of replacing each other.
+            existing_stage = omni.usd.get_context().get_stage()
+            if (
+                existing_stage
+                and existing_stage.GetPrimAtPath("/World")
+                and getattr(self, '_current_layout_id', None) == current_layout_id
+            ):
+                stage = existing_stage
+                new_stage = False
+            else:
+                stage = Usd.Stage.CreateInMemory()
+                UsdGeom.Xform.Define(stage, "/World")
+                stage.SetDefaultPrim(stage.GetPrimAtPath("/World"))
+                self._current_layout_id = current_layout_id
+                new_stage = True
 
             collision_approximation = "sdf"
-            
-            self.track_ids = []
+
+            if not hasattr(self, 'track_ids'):
+                self.track_ids = []
             door_ids = []
             door_frame_ids = []
 
@@ -772,13 +782,13 @@ class MCPExtension(omni.ext.IExt):
                     texture_door_frame,
                 )
 
-            cache = UsdUtils.StageCache.Get()
-            stage_id = cache.Insert(stage).ToLongInt()
-            omni.usd.get_context().attach_stage_with_callback(stage_id)
+            if new_stage:
+                cache = UsdUtils.StageCache.Get()
+                stage_id = cache.Insert(stage).ToLongInt()
+                omni.usd.get_context().attach_stage_with_callback(stage_id)
 
-            # Set the world axis of the stage root layer to Z
-            UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
-
+                # Set the world axis of the stage root layer to Z
+                UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
 
             return {
                 "status": "success",
