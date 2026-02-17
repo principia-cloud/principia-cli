@@ -55,6 +55,11 @@ _ensure_apt_packages() {
         needed+=(nvidia-cuda-toolkit)
     fi
 
+    # python3-venv (needed to create virtual environments on Debian/Ubuntu)
+    if ! dpkg -s python3-venv >/dev/null 2>&1; then
+        needed+=(python3-venv)
+    fi
+
     # OpenGL headers (needed by nvdiffrast / pyrender)
     if ! dpkg -s libegl1-mesa-dev >/dev/null 2>&1; then
         needed+=(libegl1-mesa-dev)
