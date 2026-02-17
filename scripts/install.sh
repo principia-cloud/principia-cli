@@ -300,11 +300,12 @@ configure_path() {
 
 main() {
     # --- Flag parsing ---
-    SKIP_SKILL_SETUP=false
+    SKIP_SKILL_SETUP=true
     USE_LOCAL=false
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --skip-skill-setup) SKIP_SKILL_SETUP=true ;;
+            --with-scene-gen)   SKIP_SKILL_SETUP=false ;;
             --branch)           shift; REPO_BRANCH="$1" ;;
             --local)            USE_LOCAL=true ;;
         esac

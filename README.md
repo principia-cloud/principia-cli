@@ -105,6 +105,12 @@ https://github.com/user-attachments/assets/d7521dd5-2653-4c3a-8601-0634c4ae476e
 curl -fsSL https://principia.cloud/install.sh | bash
 ```
 
+To include the scene-gen MCP server (GPU required, downloads ~4 GB of model weights):
+
+```bash
+curl -fsSL https://principia.cloud/install.sh | bash -s -- --with-scene-gen
+```
+
 **Windows**
 
 ```powershell
