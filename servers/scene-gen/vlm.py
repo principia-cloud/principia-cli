@@ -529,6 +529,10 @@ def _call_claude_with_retry(
                         prompt_parts.append(item["text"])
     prompt_text = "\n".join(prompt_parts)
 
+    # Instruct the subagent to output JSON directly in its response text,
+    # not write it to a file (Claude Code tends to use editedExistingFile).
+    prompt_text += "\n\nIMPORTANT: Output any JSON directly in your response text. Do NOT write it to a file."
+
     response = call_llm_via_subagent(prompt_text)
 
     log_vlm_call(
