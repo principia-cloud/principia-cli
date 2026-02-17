@@ -50,7 +50,7 @@ export const GlobalFileNames = {
 	groqModels: "groq_models.json",
 	basetenModels: "baseten_models.json",
 	hicapModels: "hicap_models.json",
-	mcpSettings: "cline_mcp_settings.json",
+	mcpSettings: "principia_mcp_settings.json",
 	clineRules: ".principiarules",
 	workflows: ".principiarules/workflows",
 	hooksDir: ".principiarules/hooks",

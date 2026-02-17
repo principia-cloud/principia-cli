@@ -1,0 +1,44 @@
+# Core MCP server
+mcp[cli]>=1.9.4
+
+# LLM / VLM clients
+openai>=1.0
+
+# Deep learning
+torch>=2.2.0
+torchvision
+open-clip-torch==2.32.0
+sentence-transformers==4.1.0
+diffusers>=0.30
+accelerate>=0.33
+
+# 3D / geometry
+trimesh>=4.0
+pyrender>=0.1.45
+shapely>=2.0
+rtree>=1.0
+xatlas
+pygltflib
+open3d
+
+# Image / rendering
+Pillow>=9.5
+opencv-python
+matplotlib
+
+# Data / serialization
+numpy
+scipy
+networkx
+compress-json
+compress-pickle
+usd-core
+objathor
+
+# Utilities
+requests
+loguru
+tqdm
+einops
+omegaconf
+typeguard
