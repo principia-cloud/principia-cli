@@ -41,3 +41,4 @@ loguru
 tqdm
 einops
 omegaconf
+typeguard
