@@ -50,7 +50,7 @@ def create_faces(triangles_data):
 ASSETS_VERSION = os.environ.get("ASSETS_VERSION", "2023_09_23")
 
 OBJATHOR_ASSETS_BASE_DIR = os.environ.get(
-    "OBJATHOR_ASSETS_BASE_DIR", os.path.expanduser(f"~/.objathor-assets")
+    "OBJATHOR_ASSETS_BASE_DIR", os.path.expanduser("~/.principia/data/scene-gen/objathor")
 )
 
 OBJATHOR_VERSIONED_DIR = os.path.join(OBJATHOR_ASSETS_BASE_DIR, ASSETS_VERSION)
@@ -59,8 +59,11 @@ OBJATHOR_FEATURES_DIR = os.path.join(OBJATHOR_VERSIONED_DIR, "features")
 OBJATHOR_ANNOTATIONS_PATH = os.path.join(OBJATHOR_VERSIONED_DIR, "annotations.json.gz")
 OBJATHOR_ASSETS_DIR = os.path.join(OBJATHOR_VERSIONED_DIR, "assets")
 
-# R2 bucket for on-demand asset downloads
-_OBJATHOR_BUCKET_URL = f"https://pub-daedd7738a984186a00f2ab264d06a07.r2.dev/{ASSETS_VERSION}"
+# S3 bucket for on-demand asset downloads
+_OBJATHOR_BUCKET_URL = os.environ.get(
+    "OBJATHOR_S3_URL",
+    f"https://principia-scene-gen-assets.s3.us-east-1.amazonaws.com/objathor/{ASSETS_VERSION}",
+)
 
 
 def _ensure_asset_downloaded(asset_id: str) -> bool:
@@ -149,23 +152,7 @@ class ObjathorRetriever:
             np.float32
         )
 
-        # Filter to only locally available assets (on-demand download is unreliable)
-        local_asset_ids = set()
-        if os.path.isdir(OBJATHOR_ASSETS_DIR):
-            for d in os.listdir(OBJATHOR_ASSETS_DIR):
-                pkl_path = os.path.join(OBJATHOR_ASSETS_DIR, d, f"{d}.pkl.gz")
-                if os.path.exists(pkl_path):
-                    local_asset_ids.add(d)
-
-        if local_asset_ids:
-            local_mask = np.array([uid in local_asset_ids for uid in objathor_uids])
-            local_indices = np.where(local_mask)[0]
-            objathor_uids = [objathor_uids[i] for i in local_indices]
-            objathor_clip_features = objathor_clip_features[local_indices]
-            objathor_sbert_features = objathor_sbert_features[local_indices]
-            print(f"ObjaThor: filtered to {len(objathor_uids)} locally available assets (of {len(local_mask)} total)", file=sys.stderr)
-        else:
-            print(f"ObjaThor: indexing all {len(objathor_uids)} assets (no local filter)", file=sys.stderr)
+        print(f"ObjaThor: indexing all {len(objathor_uids)} assets (on-demand S3 download for meshes)", file=sys.stderr)
 
         self.clip_features = torch.from_numpy(
             objathor_clip_features

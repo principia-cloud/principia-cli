@@ -25,6 +25,8 @@ import time
 import math
 import numpy as np
 from shapely.geometry import Polygon, Point, box, LineString, MultiPoint
+from shapely.prepared import prep
+from shapely import STRtree
 from rtree import index
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
@@ -1033,14 +1035,19 @@ Please design the layout now:"""
             )
         
         # Create and run DFS solver for new objects only
+        # Adaptive grid: target ~2000 grid points regardless of room size
+        room_area_cm2 = (room.dimensions.width * 100) * (room.dimensions.length * 100)
+        grid_size = max(20, int(math.sqrt(room_area_cm2 / 2000)))
+        print(f"Adaptive grid_size={grid_size} for room {room_area_cm2:.0f}cm² (target ~2000 points)", file=sys.stderr)
         solver = DFS_Solver_Floor(
-            grid_size=20,
+            grid_size=grid_size,
             max_duration=max(300, len(new_objects_list) * 60),
             constraint_bouns=1.0,
             enable_retry=True,
             room_id=room.id
         )
         
+        _solver_t0 = time.time()
         solution, solution_constraints = solver.get_solution(
             room_poly,
             new_objects_list,
@@ -1048,6 +1055,14 @@ Please design the layout now:"""
             initial_state,
             use_milp=False
         )
+        _solver_elapsed = time.time() - _solver_t0
+        _perf_msg = f"[PERF] DFS solver completed in {_solver_elapsed:.1f}s (grid_size={grid_size}, objects={len(new_objects_list)}, solutions={len(solver.solutions)})"
+        print(_perf_msg, file=sys.stderr)
+        try:
+            with open("/tmp/place_objects_timing.log", "a") as _f:
+                _f.write(_perf_msg + "\n")
+        except Exception:
+            pass
         
         # Visualize the solution for debugging
         if solution:
@@ -3094,9 +3109,14 @@ class DFS_Solver_Floor:
         else:
             grid_points = self.create_grids(bounds)
             grid_points = self.remove_points(grid_points, initial_state)
-            self.dfs(
-                bounds, objects_list, constraints, grid_points, initial_state, constraints_dict, 15 if len(objects_list) < 20 else 5
-            )
+            try:
+                self.dfs(
+                    bounds, objects_list, constraints, grid_points, initial_state, constraints_dict, 15 if len(objects_list) < 20 else 5
+                )
+            except SolutionFound:
+                pass  # Solution captured in self.solutions
+            except Exception:
+                pass  # Timeout or other error
 
         # Solutions found
         if self.solutions:
@@ -3123,11 +3143,10 @@ class DFS_Solver_Floor:
         if len(objects_list) == 0:
             self.solutions.append(placed_objects)
             self.constraints_dict_list.append(constraints_dict)
-            return placed_objects
+            raise SolutionFound(placed_objects)  # Early termination — first complete solution is good enough
 
         if time.time() - self.start_time > self.max_duration:
             raise Exception(f"Time limit reached.")
-            raise SolutionFound(self.solutions)
 
         object_id, object_dim = objects_list[0]
         print(f"dfs object_id: {object_id}, placed_objects: {len(placed_objects)}, object_dim: {object_dim}", file=sys.stderr)
@@ -3179,13 +3198,13 @@ class DFS_Solver_Floor:
             selected_placements_constraints = placements_constraints[:branch_factor]
 
         for placement, placement_constraints in zip(selected_placements, selected_placements_constraints):
-            placed_objects_updated = copy.deepcopy(placed_objects)
+            placed_objects_updated = dict(placed_objects)  # Shallow copy — values are immutable tuples
             placed_objects_updated[object_id] = placement
             grid_points_updated = self.remove_points(
                 grid_points, placed_objects_updated
             )
 
-            constraints_dict_updated = copy.deepcopy(constraints_dict)
+            constraints_dict_updated = {k: list(v) for k, v in constraints_dict.items()}  # Shallow copy lists
             constraints_dict_updated[object_id] = placement_constraints
 
             sub_paths = self.dfs(
@@ -3357,12 +3376,15 @@ class DFS_Solver_Floor:
         # get the min and max bounds of the room
         min_x, min_y, max_x, max_y = room_poly.bounds
 
+        # Pre-compute spatial index for faster containment checks
+        prepared_room = prep(room_poly)
+
         # create grid points
         grid_points = []
         for x in range(int(min_x), int(max_x), self.grid_size):
             for y in range(int(min_y), int(max_y), self.grid_size):
                 point = Point(x, y)
-                if room_poly.contains(point):
+                if prepared_room.contains(point):
                     grid_points.append((x, y))
 
         return grid_points
@@ -3396,7 +3418,7 @@ class DFS_Solver_Floor:
 
         rotation_adjustments = {
             0: (
-                (-obj_half_length, -obj_half_width), 
+                (-obj_half_length, -obj_half_width),
                 (obj_half_length, obj_half_width)
             ),
             90: (
@@ -3412,6 +3434,9 @@ class DFS_Solver_Floor:
                 (obj_half_width, obj_half_length),
             ),
         }
+
+        # Pre-compute spatial index for faster containment checks
+        prepared_room = prep(room_poly)
 
         solutions = []
         for rotation in [0, 90, 180, 270]:
@@ -3430,7 +3455,7 @@ class DFS_Solver_Floor:
                 )
                 obj_box = box(*lower_left, *upper_right)
 
-                if room_poly.contains(obj_box):
+                if prepared_room.contains(obj_box):
                     solutions.append(
                         [point, rotation, tuple(obj_box.exterior.coords[:]), 1]
                     )
@@ -3438,14 +3463,16 @@ class DFS_Solver_Floor:
         return solutions
 
     def filter_collision(self, objects_dict, solutions):
-        valid_solutions = []
+        if not objects_dict:
+            return solutions
         object_polygons = [
-            Polygon(obj_coords) for _, _, obj_coords, _ in list(objects_dict.values())
+            Polygon(obj_coords) for _, _, obj_coords, _ in objects_dict.values()
         ]
+        tree = STRtree(object_polygons)
+        valid_solutions = []
         for solution in solutions:
-            sol_obj_coords = solution[2]
-            sol_obj = Polygon(sol_obj_coords)
-            if not any(sol_obj.intersects(obj) for obj in object_polygons):
+            sol_poly = Polygon(solution[2])
+            if len(tree.query(sol_poly, predicate='intersects')) == 0:
                 valid_solutions.append(solution)
         return valid_solutions
 

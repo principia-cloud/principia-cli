@@ -3748,7 +3748,7 @@ At most 1-2 object adjustment analysis recommendations.
             "success": True,
             "room_id": room_id,
             "room_type": room.room_type,
-            "notice": "[IMPORTANT] You need to keep calling tools to improve the room quality!!! Follow the following next step instructions to improve the room quality!!! You can combine the following object addition actions into one call to place_objects_in_room(room_id, [action1] [action2] [action3] ... ) if necessary.",
+            "notice": "",  # Set below based on priority analysis
             "next_step": {
                 "actions": []  # Single list sorted by score
             },
@@ -3865,20 +3865,24 @@ At most 1-2 object adjustment analysis recommendations.
         
         # Separate modification actions (REMOVE/REPLACE/MOVE) from existing analysis
         top_modifications = modification_actions[:max_recommendations] if max_recommendations > 0 else modification_actions
-        
-        # Combine object addition actions (all) with limited modification actions
-        if propose_modifications:
-            # Return all object additions + limited modifications
-            # result["next_step"]["actions"] = [object_addition_actions] + top_modifications
-            if int(highest_priority_adjust) > int(highest_priority_add):
-                result["next_step"]["actions"] = top_modifications
-            else:
-                result["next_step"]["actions"] = [object_addition_actions]
+
+        # Check if the room is good enough to stop
+        highest_priority = max(highest_priority_adjust, highest_priority_add)
+
+        if highest_priority <= stop_scene_generation_threshold:
+            # Room is satisfactory — signal the agent to stop
+            result["notice"] = "Room quality is satisfactory. No critical improvements needed. You may proceed to the next stage."
+            result["next_step"]["actions"] = []
         else:
-            # Return only object additions
-            result["next_step"]["actions"] = object_addition_actions
-        
-        
+            # Room needs improvement — provide actions
+            result["notice"] = "The following improvements are suggested. You can combine object addition actions into one call to place_objects_in_room(room_id, [action1] [action2] ...) if needed."
+            if propose_modifications:
+                if int(highest_priority_adjust) > int(highest_priority_add):
+                    result["next_step"]["actions"] = top_modifications
+                else:
+                    result["next_step"]["actions"] = [object_addition_actions]
+            else:
+                result["next_step"]["actions"] = object_addition_actions
 
         return json.dumps(result, indent=2)
         

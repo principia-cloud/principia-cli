@@ -128,7 +128,7 @@ def get_object_candidates(object_info: dict, source: str = None):
     if source == "objaverse": # disable in the code release.
         object_retriever = object_retriever_objaverse
         database = object_retriever.database
-        similarity_threshold_floor = 24  # lowered from 31 for smaller local asset pool
+        similarity_threshold_floor = 31
         caption = f"A 3D model of {object_type}, {object_description}"
         candidates_retrieved = object_retriever.retrieve(
             [caption],
@@ -146,7 +146,7 @@ def get_object_candidates(object_info: dict, source: str = None):
 
         candidates = []
         for asset_id, _ in candidates_retrieved:
-            infer_attributes = False
+            infer_attributes = True
             try:
                 candidate = object_retriever.load_object(asset_id, infer_attributes=infer_attributes, caption=caption)
             except Exception as e:
