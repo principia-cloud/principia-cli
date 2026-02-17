@@ -55,11 +55,6 @@ _ensure_apt_packages() {
         needed+=(nvidia-cuda-toolkit)
     fi
 
-    # python3-venv (needed to create virtual environments on Debian/Ubuntu)
-    if ! dpkg -s python3-venv >/dev/null 2>&1; then
-        needed+=(python3-venv)
-    fi
-
     # OpenGL headers (needed by nvdiffrast / pyrender)
     if ! dpkg -s libegl1-mesa-dev >/dev/null 2>&1; then
         needed+=(libegl1-mesa-dev)
@@ -142,6 +137,25 @@ setup_scene_gen() {
         return
     }
     info "Using Python: ${python_cmd} ($(${python_cmd} --version 2>&1))"
+
+    # ----- Ensure version-specific venv package (Debian/Ubuntu) -----
+    # The generic python3-venv metapackage may not cover the actual Python
+    # version in use (e.g. python3.12 needs python3.12-venv).
+    if command -v dpkg >/dev/null 2>&1; then
+        local py_ver
+        py_ver="$("$python_cmd" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+        local venv_pkg="python${py_ver}-venv"
+        if ! dpkg -s "$venv_pkg" >/dev/null 2>&1; then
+            info "Installing ${venv_pkg}..."
+            if command -v sudo >/dev/null 2>&1; then
+                sudo apt-get update -qq && sudo apt-get install -y -qq "$venv_pkg" || {
+                    warn "Failed to install ${venv_pkg} — venv creation may fail"
+                }
+            else
+                warn "sudo not available — cannot install ${venv_pkg}"
+            fi
+        fi
+    fi
 
     # ----- Venv creation with staleness check -----
     local req_file="${scene_gen_source}/requirements.txt"
