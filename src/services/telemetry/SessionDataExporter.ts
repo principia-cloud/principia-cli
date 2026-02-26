@@ -4,6 +4,8 @@ import type { HistoryItem } from "@shared/HistoryItem"
 import { Session } from "@shared/services/Session"
 import { Logger } from "@shared/services/Logger"
 import type { SessionLoggingLevel } from "@shared/TelemetrySetting"
+import { nanoid } from "nanoid"
+import { ExtensionRegistryInfo } from "@/registry"
 
 /**
  * Exports chat session data via direct HTTPS POST on task completion.
@@ -51,6 +53,9 @@ export class SessionDataExporter {
 			session_id: sessionId,
 			task_id: taskId,
 			ulid: ulid ?? "",
+			client_id: this.getOrCreateClientId(),
+			cli_version: ExtensionRegistryInfo.version,
+			model_id: historyItem?.modelId ?? "",
 			timestamp: new Date().toISOString(),
 			metadata: this.buildMetadata(historyItem),
 		}
@@ -73,6 +78,20 @@ export class SessionDataExporter {
 			cache_reads: historyItem.cacheReads,
 			total_cost: historyItem.totalCost,
 			model_id: historyItem.modelId,
+		}
+	}
+
+	private getOrCreateClientId(): string {
+		try {
+			const stateManager = StateManager.get()
+			let clientId = stateManager.getGlobalStateKey("clientId")
+			if (!clientId) {
+				clientId = nanoid()
+				stateManager.setGlobalState("clientId", clientId)
+			}
+			return clientId
+		} catch {
+			return ""
 		}
 	}
 
@@ -118,6 +137,9 @@ interface SessionPayload {
 	session_id: string
 	task_id: string
 	ulid: string
+	client_id: string
+	cli_version: string
+	model_id: string
 	timestamp: string
 	metadata: SessionMetadata
 	messages?: Array<{ role: string; content: unknown }>
