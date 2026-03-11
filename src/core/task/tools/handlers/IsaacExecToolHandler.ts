@@ -198,6 +198,22 @@ export class IsaacExecToolHandler implements IFullyManagedTool {
 	}
 
 	/**
+	 * Find the MCP extension folder (servers/isaacsim containing isaac.sim.mcp_extension).
+	 */
+	private findMcpExtFolder(): string | undefined {
+		const principiaHome = process.env.PRINCIPIA_HOME || path.join(os.homedir(), ".principia")
+		const candidates = [
+			path.join(principiaHome, "source", "servers", "isaacsim"),
+		]
+		for (const dir of candidates) {
+			if (fs.existsSync(path.join(dir, "isaac.sim.mcp_extension", "config", "extension.toml"))) {
+				return dir
+			}
+		}
+		return undefined
+	}
+
+	/**
 	 * Launch Isaac Sim as a detached background process.
 	 */
 	private launchIsaacSim(isaacPath: string, headless: boolean): void {
@@ -208,10 +224,25 @@ export class IsaacExecToolHandler implements IFullyManagedTool {
 			throw new Error(`Launch script not found: ${scriptPath}`)
 		}
 
-		const child = spawn(scriptPath, ["--enable", "isaacsim.code_editor.vscode"], {
+		const args = ["--enable", "isaacsim.code_editor.vscode"]
+
+		// Also enable MCP extension if available
+		const extFolder = this.findMcpExtFolder()
+		if (extFolder) {
+			args.push("--ext-folder", extFolder, "--enable", "isaac.sim.mcp_extension")
+		}
+
+		const principiaHome = process.env.PRINCIPIA_HOME || path.join(os.homedir(), ".principia")
+		const env = {
+			...process.env,
+			SCENE_GEN_DATA_DIR: process.env.SCENE_GEN_DATA_DIR || path.join(principiaHome, "data", "scene-gen"),
+		}
+
+		const child = spawn(scriptPath, args, {
 			detached: true,
 			stdio: "ignore",
 			cwd: isaacPath,
+			env,
 		})
 		child.unref()
 	}

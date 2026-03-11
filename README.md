@@ -105,6 +105,12 @@ https://github.com/user-attachments/assets/d7521dd5-2653-4c3a-8601-0634c4ae476e
 curl -fsSL https://principia.cloud/install.sh | bash
 ```
 
+To include the scene-gen MCP server (GPU required, downloads ~4 GB of model weights):
+
+```bash
+curl -fsSL https://principia.cloud/install.sh | bash -s -- --with-scene-gen
+```
+
 **Windows**
 
 ```powershell
@@ -141,6 +147,20 @@ principia "Create a pick-and-place simulation for a UR5 arm"
 ```
 
 See the [Development Guide](DEVELOPMENT.md#cli-reference) for the full CLI reference.
+
+## V0.2 Release 🎉
+Improved agentic architecture to follow [SAGE: Scalable Agentic 3D Scene Generation for Embodied AI](https://arxiv.org/pdf/2602.10116). 
+
+- Improved Scene Generation: Principia will automatically generate a physically valid, semantically plausible 3D environment to match scene prompt.
+- Better physical validation: Every generated scene is now pre-verified for physical stability, ensuring that objects don't "explode" or fall through floors when the simulation starts.
+
+## Example Prompt
+```
+Create a room featuring two cream-colored walls and a light wood plank floor. In the center is a low-profile platform bed with solid matte black bedding and pillows. To the left, a burnt orange wooden desk with a matching chair and a tall narrow wardrobe. To the right, a small wooden nightstand, a slender floor lamp with a cream shade, a yellow geometric console, and a laundry hamper with an orange chevron pattern. High-contrast lighting with sharp, dramatic shadows.
+```
+## Result
+
+https://github.com/user-attachments/assets/43e94146-7a3d-4e9d-b97c-bc7215260bed
 
 ## Resources
 

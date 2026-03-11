@@ -1,6 +1,6 @@
 {
-	"name": "principia",
-	"version": "0.0.1",
+	"name": "principia-cli",
+	"version": "0.2.0",
 	"description": "Principia is an open-source CLI tool for building robotics simulations from natural language.",
 	"main": "dist/cli.mjs",
 	"bin": {
@@ -53,11 +53,11 @@
 	"license": "Apache-2.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/principia-cloud/principia-agent"
+		"url": "https://github.com/principia-cloud/principia-cli"
 	},
 	"homepage": "https://principia.cloud/agent",
 	"bugs": {
-		"url": "https://github.com/principia-cloud/principia-agent/issues"
+		"url": "https://github.com/principia-cloud/principia-cli/issues"
 	},
 	"devDependencies": {
 		"@types/node": "20.x",
